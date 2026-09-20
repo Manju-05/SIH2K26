@@ -1,0 +1,79 @@
+/* ==========================================================================
+   SeaScan AI - Flow Nex Minimalist Acoustic Workspace Stylesheet
+   ========================================================================== */
+
+@layer base {
+    html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0c1017;
+        color: #d1d5db;
+        font-family: 'Inter', sans-serif;
+    }
+    body {
+        overscroll-behavior: none;
+    }
+}
+
+.font-mono-clean {
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Subtle sonar acoustic texture */
+.acoustic-grain {
+    background-color: #0b0f15;
+    background-image: 
+        radial-gradient(ellipse at 50% 50%, rgba(26, 36, 48, 0.35) 0%, rgba(11, 15, 21, 0.95) 100%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 4px);
+}
+
+.water-line {
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.5) 50%, rgba(56, 189, 248, 0.15) 100%);
+}
+
+.scan-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(56, 189, 248, 0.85);
+    box-shadow: 0 0 10px #38bdf8;
+    top: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: top 0.1s linear;
+}
+
+.scan-line.scanning {
+    opacity: 1;
+    animation: sweepWaterfall 3s infinite linear;
+}
+
+@keyframes sweepWaterfall {
+    0% { top: 0%; }
+    100% { top: 100%; }
+}
+
+/* Leaflet dark styling */
+.leaflet-container {
+    background: #090d13 !important;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0c1017;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1e2634;
+    border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #2b384e;
+}

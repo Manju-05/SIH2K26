@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_dashboard" name="shell-type"/>
+<title>SeaScan AI - Minimalist Acoustic Workspace</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0c1017;
+        color: #d1d5db;
+        font-family: 'Inter', sans-serif;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+    }
+    .font-mono-clean {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    /* Clean subtle sonar texture without heavy gradients */
+    .acoustic-grain {
+      background-color: #0b0f15;
+      background-image: 
+        radial-gradient(ellipse at 50% 50%, rgba(26, 36, 48, 0.35) 0%, rgba(11, 15, 21, 0.95) 100%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 4px);
+    }
+    .water-line {
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.5) 50%, rgba(56, 189, 248, 0.15) 100%);
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden select-none flex flex-col bg-[#0c1017] text-[#9ca3af]">
+<!-- REGION 1: Ultra-thin Top Bar (height 40px) -->
+<header class="h-10 shrink-0 bg-[#0e131b] border-b border-[#1e2634] px-4 flex items-center justify-between z-30">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#38bdf8]"></span>
+<span class="text-sm font-medium text-white tracking-tight">SeaScan AI</span>
+</div>
+<span class="text-[#374151]">/</span>
+<span class="text-xs text-[#9ca3af]">SURV-2025-04A</span>
+<button class="flex items-center gap-1 text-[11px] text-[#6b7280] hover:text-[#d1d5db] transition-colors ml-1 px-1.5 py-0.5 rounded hover:bg-[#161d28]">
+<span>Mission Info</span>
+<span class="material-symbols-outlined text-[13px]">expand_more</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-1.5 text-xs text-[#d1d5db] bg-[#161d28] hover:bg-[#1f2937] px-2.5 py-1 border border-[#1e2634] rounded transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px] text-[#38bdf8]">upload_file</span>
+<span>Upload Log</span>
+</button>
+</div>
+</header>
+<!-- WORKSPACE WRAPPER: Rail + Main Viewport + Optional Drawer -->
+<div class="flex-1 flex overflow-hidden relative">
+<!-- REGION 2: Thin Left Rail (200px wide) -->
+<aside class="w-[200px] shrink-0 bg-[#0c1017] border-r border-[#1e2634] flex flex-col justify-between p-3 select-none">
+<div class="flex flex-col gap-6">
+<!-- 3-item clean menu -->
+<nav class="flex flex-col gap-0.5">
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-white bg-[#161e2b] border-l-2 border-[#38bdf8] transition-colors" href="#">
+<span class="material-symbols-outlined text-[15px] text-[#38bdf8]">waterfall_chart</span>
+<span>Sonar Waterfall</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-[#9ca3af] hover:text-white hover:bg-[#131822] transition-colors" href="#">
+<span class="material-symbols-outlined text-[15px]">map</span>
+<span>Map View</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-[#9ca3af] hover:text-white hover:bg-[#131822] transition-colors" href="#">
+<span class="material-symbols-outlined text-[15px]">description</span>
+<span>Reports</span>
+</a>
+</nav>
+<!-- Transect survey logs -->
+<div class="flex flex-col gap-2">
+<div class="text-[10px] uppercase font-semibold text-[#4b5563] tracking-wider px-2">Transects</div>
+<div class="flex flex-col gap-1">
+<div class="px-2 py-1.5 rounded bg-[#131924] border border-[#1e2634]/60 cursor-pointer">
+<div class="text-xs text-white font-medium flex items-center justify-between">
+<span>Transect 04A</span>
+<span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+</div>
+<div class="text-[10px] text-[#6b7280] mt-0.5">Today, 14:12 UTC</div>
+</div>
+<div class="px-2 py-1.5 rounded hover:bg-[#131822] cursor-pointer transition-colors">
+<div class="text-xs text-[#9ca3af]">Transect 03B</div>
+<div class="text-[10px] text-[#4b5563] mt-0.5">Today, 12:40 UTC</div>
+</div>
+<div class="px-2 py-1.5 rounded hover:bg-[#131822] cursor-pointer transition-colors">
+<div class="text-xs text-[#9ca3af]">Transect 02A</div>
+<div class="text-[10px] text-[#4b5563] mt-0.5">Today, 10:15 UTC</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-2 py-1 text-[10px] text-[#4b5563]">
+        AUV-ORCA-IV Connected
+      </div>
+</aside>
+<!-- REGION 3: Main Central Viewport (>80% weight) -->
+<main class="flex-1 flex flex-col min-w-0 bg-[#090d13] relative overflow-hidden"><div class="flex flex-col w-full h-full select-none overflow-y-auto">
+<!-- Sub-header context banner -->
+<div class="px-6 py-4 flex items-center justify-between border-b border-surface-variant/40 bg-surface-container-low shrink-0">
+<div class="flex items-center gap-3">
+<div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+<div>
+<h1 class="font-headline-sm text-headline-sm text-on-surface font-medium tracking-tight">Ingested Transect Logs</h1>
+<p class="font-label-code text-label-code text-on-surface-variant/70 mt-0.5">ACOUSTIC BACKSCATTER RUNS • MISSION ID: SURV-2025-04A</p>
+</div>
+</div>
+<div class="flex items-center gap-2.5">
+<div class="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container rounded text-on-surface-variant font-label-code text-label-code border border-surface-variant/40">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>DATABASE SYNCED</span>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-1 bg-surface hover:bg-surface-container text-on-surface font-label-code text-label-code border border-surface-variant/70 hover:border-primary transition-colors rounded" type="button">
+<span class="material-symbols-outlined text-[13px] text-primary">download</span>
+<span>Export All (ZIP)</span>
+</button>
+</div>
+</div>
+<!-- Primary tabular layout container -->
+<div class="p-6 flex flex-col flex-1">
+<div class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded overflow-hidden">
+<!-- Table Header -->
+<div class="grid grid-cols-12 gap-4 px-4 py-2.5 bg-surface-container-high/60 border-b border-surface-variant/60 font-label-caps text-label-caps text-on-surface-variant tracking-wider">
+<div class="col-span-5 flex items-center gap-2">
+<span>TRANSECT / SURVEY LOG</span>
+</div>
+<div class="col-span-3">
+<span>TIMESTAMP (UTC)</span>
+</div>
+<div class="col-span-2">
+<span>CLASSIFIED ANOMALIES</span>
+</div>
+<div class="col-span-2 text-right">
+<span>DATA PAYLOAD</span>
+</div>
+</div>
+<!-- Log Rows Container -->
+<div class="flex flex-col divide-y divide-surface-variant/30 text-on-surface">
+<!-- ROW 1: TRANSECT 04A (Expanded State) -->
+<div class="flex flex-col bg-surface-container/40">
+<div class="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-surface-container transition-colors cursor-pointer" onclick="toggleRow('row-04a', 'icon-04a')">
+<div class="col-span-5 flex items-center gap-2.5 min-w-0">
+<span class="material-symbols-outlined text-[15px] text-primary transition-transform" id="icon-04a">expand_more</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-medium truncate">Transect 04A</span>
+<span class="font-label-code text-label-code text-on-surface-variant/80 truncate">(Shelf Bight)</span>
+<span class="px-1.5 py-0.5 text-[9px] font-label-caps rounded bg-tertiary/10 text-tertiary border border-tertiary/30">VALIDATED</span>
+</div>
+<div class="col-span-3 font-mono-metric-md text-mono-metric-md text-on-surface-variant">
+              2025-05-18 14:12:08 UTC
+            </div>
+<div class="col-span-2 flex items-center gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-code font-label-code bg-error-container/30 text-error border border-error/30 font-medium">
+                4 detections
+              </span>
+</div>
+<div class="col-span-2 flex items-center justify-end gap-1.5 font-label-code text-label-code" onclick="event.stopPropagation()">
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-variant hover:text-primary text-on-surface-variant rounded border border-surface-variant/50 transition-colors">
+                CSV
+              </button>
+<button class="px-2 py-1 bg-surface-container hover:bg-surface-variant hover:text-primary text-on-surface-variant rounded border border-surface-variant/50 transition-colors">
+                JSON
+              </button>
+</div>
+</div>
+<!-- Inline Sub-Table / Child Records -->
+<div class="flex flex-col border-t border-surface-variant/40 bg-surface-container-lowest/90 px-6 py-4" id="row-04a">
+<div class="flex items-center justify-between pb-2 mb-2 border-b border-surface-variant/30">
+<span class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[13px] text-secondary">insights</span>
+                TARGET ANOMALIES RECORDED FOR TRANSECT 04A (RUN DEPTH: 138-144 M)
+              </span>
+<span class="font-label-code text-label-code text-on-surface-variant/60">4 CLASSIFICATIONS LOGGED</span>
+</div>
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-variant/30 font-label-caps text-label-caps text-on-surface-variant/80">
+<th class="py-2 pr-4 font-normal">TARGET ID &amp; CLASSIFICATION</th>
+<th class="py-2 px-4 font-normal">CONFIDENCE</th>
+<th class="py-2 px-4 font-normal">POSITION (LAT / LON)</th>
+<th class="py-2 px-4 font-normal">DEPTH</th>
+<th class="py-2 pl-4 text-right font-normal">ACTION</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-variant/20 font-label-code text-label-code">
+<!-- Sub Item 1 -->
+<tr class="hover:bg-surface-container-high/40 transition-colors">
+<td class="py-2.5 pr-4 flex items-center gap-2">
+<span class="text-on-surface font-mono-metric-md">D-0107</span>
+<span class="text-on-surface-variant/50">•</span>
+<span class="text-on-surface font-medium">Exposed Pipeline</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-secondary-container/20 text-secondary border border-secondary-container/40">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                        94%
+                      </span>
+</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface-variant">44° 18.294' N, 063° 32.118' W</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface">138.2 m</td>
+<td class="py-2.5 pl-4 text-right">
+<button class="text-primary hover:text-surface-tint underline decoration-primary/40 underline-offset-2" onclick="if(window.openDrawer){window.openDrawer('pipeline');}">Inspect Target</button>
+</td>
+</tr>
+<!-- Sub Item 2 -->
+<tr class="hover:bg-surface-container-high/40 transition-colors">
+<td class="py-2.5 pr-4 flex items-center gap-2">
+<span class="text-on-surface font-mono-metric-md">D-0104</span>
+<span class="text-on-surface-variant/50">•</span>
+<span class="text-on-surface font-medium">Ghost Net / Trawl</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-secondary-container/20 text-secondary border border-secondary-container/40">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                        88%
+                      </span>
+</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface-variant">44° 18.312' N, 063° 32.095' W</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface">141.0 m</td>
+<td class="py-2.5 pl-4 text-right">
+<button class="text-primary hover:text-surface-tint underline decoration-primary/40 underline-offset-2" onclick="if(window.openDrawer){window.openDrawer('net');}">Inspect Target</button>
+</td>
+</tr>
+<!-- Sub Item 3 -->
+<tr class="hover:bg-surface-container-high/40 transition-colors">
+<td class="py-2.5 pr-4 flex items-center gap-2">
+<span class="text-on-surface font-mono-metric-md">D-0112</span>
+<span class="text-on-surface-variant/50">•</span>
+<span class="text-on-surface font-medium">Structural Steel</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-error-container/30 text-error border border-error/40">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                        91%
+                      </span>
+</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface-variant">44° 18.240' N, 063° 32.180' W</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface">139.4 m</td>
+<td class="py-2.5 pl-4 text-right">
+<button class="text-primary hover:text-surface-tint underline decoration-primary/40 underline-offset-2" onclick="if(window.openDrawer){window.openDrawer('pipeline');}">Inspect Target</button>
+</td>
+</tr>
+<!-- Sub Item 4 -->
+<tr class="hover:bg-surface-container-high/40 transition-colors">
+<td class="py-2.5 pr-4 flex items-center gap-2">
+<span class="text-on-surface font-mono-metric-md">D-0109</span>
+<span class="text-on-surface-variant/50">•</span>
+<span class="text-on-surface font-medium">Cylindrical Drum</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-surface-variant text-on-surface-variant border border-surface-variant/60">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                        72%
+                      </span>
+</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface-variant">44° 18.350' N, 063° 32.040' W</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface">142.6 m</td>
+<td class="py-2.5 pl-4 text-right">
+<button class="text-primary hover:text-surface-tint underline decoration-primary/40 underline-offset-2" onclick="if(window.openDrawer){window.openDrawer('boulder');}">Inspect Target</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- ROW 2: TRANSECT 03B -->
+<div class="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-surface-container/60 transition-colors cursor-pointer group" onclick="toggleGenericRow('row-03b', 'icon-03b')">
+<div class="col-span-5 flex items-center gap-2.5 min-w-0">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant/60 transition-transform" id="icon-03b">chevron_right</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-medium truncate">Transect 03B</span>
+<span class="font-label-code text-label-code text-on-surface-variant/80 truncate">(South Ridge)</span>
+<span class="px-1.5 py-0.5 text-[9px] font-label-caps rounded bg-tertiary/10 text-tertiary border border-tertiary/30">VALIDATED</span>
+</div>
+<div class="col-span-3 font-mono-metric-md text-mono-metric-md text-on-surface-variant">
+            2025-05-18 12:40:15 UTC
+          </div>
+<div class="col-span-2 flex items-center gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-code font-label-code bg-surface-container text-on-surface border border-surface-variant/50">
+              2 anomalies
+            </span>
+</div>
+<div class="col-span-2 flex items-center justify-end gap-1.5 font-label-code text-label-code" onclick="event.stopPropagation()">
+<button class="px-2 py-1 bg-surface-container group-hover:border-surface-variant hover:text-primary text-on-surface-variant rounded border border-surface-variant/40 transition-colors">
+              CSV
+            </button>
+<button class="px-2 py-1 bg-surface-container group-hover:border-surface-variant hover:text-primary text-on-surface-variant rounded border border-surface-variant/40 transition-colors">
+              JSON
+            </button>
+</div>
+</div>
+<!-- Hidden Sub-Table for 03B -->
+<div class="hidden flex-col border-t border-surface-variant/40 bg-surface-container-lowest px-6 py-4" id="row-03b">
+<div class="flex items-center justify-between pb-2 mb-2 border-b border-surface-variant/30">
+<span class="font-label-caps text-label-caps text-on-surface-variant">TARGET ANOMALIES RECORDED FOR TRANSECT 03B</span>
+<span class="font-label-code text-label-code text-on-surface-variant/60">2 CLASSIFICATIONS</span>
+</div>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-variant/30 font-label-caps text-label-caps text-on-surface-variant/80">
+<th class="py-2 pr-4 font-normal">TARGET ID &amp; CLASSIFICATION</th>
+<th class="py-2 px-4 font-normal">CONFIDENCE</th>
+<th class="py-2 px-4 font-normal">POSITION</th>
+<th class="py-2 px-4 font-normal">DEPTH</th>
+<th class="py-2 pl-4 text-right font-normal">ACTION</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-variant/20 font-label-code text-label-code">
+<tr>
+<td class="py-2.5 pr-4 text-on-surface">D-0098 • Natural Bedrock Ridge</td>
+<td class="py-2.5 px-4 text-tertiary">76%</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface-variant">44° 18.260' N, 063° 32.190' W</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface">141.0 m</td>
+<td class="py-2.5 pl-4 text-right"><button class="text-primary hover:text-surface-tint" onclick="if(window.openDrawer){window.openDrawer('ridge');}">Inspect</button></td>
+</tr>
+<tr>
+<td class="py-2.5 pr-4 text-on-surface">D-0099 • Glacial Boulder</td>
+<td class="py-2.5 px-4 text-tertiary">82%</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface-variant">44° 18.275' N, 063° 32.080' W</td>
+<td class="py-2.5 px-4 font-mono-metric-md text-on-surface">137.4 m</td>
+<td class="py-2.5 pl-4 text-right"><button class="text-primary hover:text-surface-tint" onclick="if(window.openDrawer){window.openDrawer('boulder');}">Inspect</button></td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- ROW 3: TRANSECT 02A -->
+<div class="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-surface-container/60 transition-colors cursor-pointer group">
+<div class="col-span-5 flex items-center gap-2.5 min-w-0">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant/60">chevron_right</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-medium truncate">Transect 02A</span>
+<span class="font-label-code text-label-code text-on-surface-variant/80 truncate">(Shoal Shelf)</span>
+<span class="px-1.5 py-0.5 text-[9px] font-label-caps rounded bg-tertiary/10 text-tertiary border border-tertiary/30">VALIDATED</span>
+</div>
+<div class="col-span-3 font-mono-metric-md text-mono-metric-md text-on-surface-variant">
+            2025-05-18 10:15:44 UTC
+          </div>
+<div class="col-span-2 flex items-center gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-code font-label-code bg-surface-container text-on-surface-variant/70 border border-surface-variant/30">
+              0 anomalies
+            </span>
+</div>
+<div class="col-span-2 flex items-center justify-end gap-1.5 font-label-code text-label-code" onclick="event.stopPropagation()">
+<button class="px-2 py-1 bg-surface-container group-hover:border-surface-variant hover:text-primary text-on-surface-variant rounded border border-surface-variant/40 transition-colors">
+              CSV
+            </button>
+<button class="px-2 py-1 bg-surface-container group-hover:border-surface-variant hover:text-primary text-on-surface-variant rounded border border-surface-variant/40 transition-colors">
+              JSON
+            </button>
+</div>
+</div>
+<!-- ROW 4: TRANSECT 01C -->
+<div class="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-surface-container/60 transition-colors cursor-pointer group">
+<div class="col-span-5 flex items-center gap-2.5 min-w-0">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant/60">chevron_right</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-medium truncate">Transect 01C</span>
+<span class="font-label-code text-label-code text-on-surface-variant/80 truncate">(Inlet Approach)</span>
+<span class="px-1.5 py-0.5 text-[9px] font-label-caps rounded bg-outline-variant/30 text-on-surface-variant border border-outline-variant/50">ARCHIVED</span>
+</div>
+<div class="col-span-3 font-mono-metric-md text-mono-metric-md text-on-surface-variant">
+            2025-05-18 08:30:19 UTC
+          </div>
+<div class="col-span-2 flex items-center gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-code font-label-code bg-surface-container text-on-surface border border-surface-variant/50">
+              1 anomaly
+            </span>
+</div>
+<div class="col-span-2 flex items-center justify-end gap-1.5 font-label-code text-label-code" onclick="event.stopPropagation()">
+<button class="px-2 py-1 bg-surface-container group-hover:border-surface-variant hover:text-primary text-on-surface-variant rounded border border-surface-variant/40 transition-colors">
+              CSV
+            </button>
+<button class="px-2 py-1 bg-surface-container group-hover:border-surface-variant hover:text-primary text-on-surface-variant rounded border border-surface-variant/40 transition-colors">
+              JSON
+            </button>
+</div>
+</div>
+</div>
+<!-- Tabular Footer / Metadata Strip -->
+<div class="px-4 py-2 bg-surface-container-high/40 border-t border-surface-variant/40 flex items-center justify-between text-on-surface-variant font-label-code text-label-code">
+<div class="flex items-center gap-4">
+<span>SHOWING 4 OF 4 TRANSECTS</span>
+<span>•</span>
+<span>TOTAL LOGGED DETECTIONS: 7</span>
+</div>
+<div class="flex items-center gap-2">
+<span>SURVEY COMPLIANCE: IHO S-44 ORDER 1A</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function toggleRow(rowId, iconId) {
+    const row = document.getElementById(rowId);
+    const icon = document.getElementById(iconId);
+    if (!row) return;
+
+    if (row.classList.contains('hidden')) {
+      row.classList.remove('hidden');
+      row.classList.add('flex');
+      if (icon) icon.textContent = 'expand_more';
+    } else {
+      row.classList.remove('flex');
+      row.classList.add('hidden');
+      if (icon) icon.textContent = 'chevron_right';
+    }
+  }
+
+  function toggleGenericRow(rowId, iconId) {
+    const row = document.getElementById(rowId);
+    const icon = document.getElementById(iconId);
+    if (!row) return;
+
+    if (row.classList.contains('hidden')) {
+      row.classList.remove('hidden');
+      row.classList.add('flex');
+      if (icon) icon.textContent = 'expand_more';
+    } else {
+      row.classList.remove('flex');
+      row.classList.add('hidden');
+      if (icon) icon.textContent = 'chevron_right';
+    }
+  }
+</script></main>
+<!-- Slide-out Drawer / Detail Panel (320px wide) -->
+<aside class="w-[320px] shrink-0 bg-[#0f141d] border-l border-[#1e2634] flex flex-col justify-between transition-all duration-200 z-20" id="detailDrawer">
+<!-- Drawer Header & Content -->
+<div class="p-4 flex flex-col gap-4">
+<div class="flex items-center justify-between pb-2 border-b border-[#1e2634]">
+<div class="text-xs font-medium text-white tracking-wide">Target Inspection</div>
+<button class="text-[#6b7280] hover:text-white transition-colors" onclick="closeDrawer()" title="Close">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Clean Cropped Greyscale Acoustic Thumbnail -->
+<div class="w-full h-28 bg-[#090c12] border border-[#1e2634] rounded flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-25" style="background: radial-gradient(circle at center, rgba(255,255,255,0.12) 0%, transparent 70%);"></div>
+<!-- Greyscale backscatter highlight & shadow -->
+<div class="relative flex flex-col items-center">
+<div class="w-28 h-2 bg-white/90 rounded-sm"></div>
+<div class="w-32 h-3 bg-black/90 mt-1"></div>
+</div>
+<span class="absolute bottom-1.5 right-2 text-[9px] font-mono-clean text-[#4b5563]">900 kHz</span>
+</div>
+<!-- 5 Sparse Data Fields -->
+<div class="flex flex-col gap-3.5 pt-1">
+<div>
+<div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Classification</div>
+<div class="text-xs text-white font-medium mt-0.5" id="drawerClass">Exposed Pipeline</div>
+</div>
+<div>
+<div class="flex items-center justify-between text-[10px]">
+<span class="text-[#6b7280] uppercase tracking-wider">Confidence</span>
+<span class="font-mono-clean text-[#f59e0b] font-medium" id="drawerConfText">94%</span>
+</div>
+<div class="w-full h-1 bg-[#1a222f] rounded-full mt-1 overflow-hidden">
+<div class="h-full bg-[#f59e0b] rounded-full" id="drawerConfBar" style="width: 94%;"></div>
+</div>
+</div>
+<div>
+<div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Coordinates</div>
+<div class="text-xs font-mono-clean text-[#d1d5db] mt-0.5" id="drawerCoords">44° 18.294' N, 063° 32.118' W</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Length</div>
+<div class="text-xs font-mono-clean text-white mt-0.5" id="drawerLength">14.8 m</div>
+</div>
+<div>
+<div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Depth</div>
+<div class="text-xs font-mono-clean text-white mt-0.5" id="drawerDepth">138 m</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Drawer Action Button -->
+<div class="p-4 border-t border-[#1e2634]">
+<button class="w-full py-1.5 px-3 border border-[#38bdf8] text-[#38bdf8] hover:bg-[#38bdf8]/10 text-xs font-medium rounded transition-colors text-center" type="button">
+          Export Detection
+        </button>
+</div>
+</aside>
+</div>
+<script>
+    const anomalies = {
+      pipeline: {
+        classification: 'Exposed Pipeline',
+        confidence: '94%',
+        confVal: 94,
+        color: '#f59e0b',
+        coords: "44° 18.294' N, 063° 32.118' W",
+        length: '14.8 m',
+        depth: '138 m'
+      },
+      net: {
+        classification: 'Discarded Ghost Net',
+        confidence: '88%',
+        confVal: 88,
+        color: '#ef4444',
+        coords: "44° 18.312' N, 063° 32.145' W",
+        length: '8.4 m',
+        depth: '139 m'
+      },
+      ridge: {
+        classification: 'Natural Bedrock Ridge',
+        confidence: '76%',
+        confVal: 76,
+        color: '#10b981',
+        coords: "44° 18.260' N, 063° 32.190' W",
+        length: '6.1 m',
+        depth: '141 m'
+      },
+      boulder: {
+        classification: 'Glacial Boulder',
+        confidence: '82%',
+        confVal: 82,
+        color: '#10b981',
+        coords: "44° 18.275' N, 063° 32.080' W",
+        length: '2.3 m',
+        depth: '137 m'
+      }
+    };
+
+    function openDrawer(type) {
+      const drawer = document.getElementById('detailDrawer');
+      const data = anomalies[type] || anomalies.pipeline;
+
+      document.getElementById('drawerClass').textContent = data.classification;
+      document.getElementById('drawerConfText').textContent = data.confidence;
+      document.getElementById('drawerConfText').style.color = data.color;
+      
+      const bar = document.getElementById('drawerConfBar');
+      bar.style.width = data.confidence;
+      bar.style.backgroundColor = data.color;
+
+      document.getElementById('drawerCoords').textContent = data.coords;
+      document.getElementById('drawerLength').textContent = data.length;
+      document.getElementById('drawerDepth').textContent = data.depth;
+
+      drawer.classList.remove('hidden');
+    }
+
+    function closeDrawer() {
+      const drawer = document.getElementById('detailDrawer');
+      drawer.classList.add('hidden');
+    }
+  </script>
+</body></html>

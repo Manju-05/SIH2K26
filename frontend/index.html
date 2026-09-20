@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>SeaScan AI | Flow Nex Sonar Console (MoES / NIOT SIH26057)</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <!-- Tailwind CSS with Forms & Container Queries -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="h-screen w-screen overflow-hidden select-none flex flex-col bg-[#0c1017] text-[#9ca3af]">
+
+    <!-- REGION 1: Ultra-thin Top Bar (height 40px) -->
+    <header class="h-10 shrink-0 bg-[#0e131b] border-b border-[#1e2634] px-4 flex items-center justify-between z-30">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-[#38bdf8] shadow-[0_0_8px_#38bdf8]"></span>
+                <span class="text-sm font-medium text-white tracking-tight">SeaScan AI</span>
+                <span class="text-[10px] font-mono-clean bg-[#162030] text-[#7bd0ff] px-1.5 py-0.2 rounded border border-[#22364f]">SIH26057</span>
+            </div>
+            <span class="text-[#374151]">/</span>
+            <span class="text-xs text-[#9ca3af] font-mono-clean">SURV-2026-NIOT</span>
+            <button class="flex items-center gap-1 text-[11px] text-[#6b7280] hover:text-[#d1d5db] transition-colors ml-1 px-1.5 py-0.5 rounded hover:bg-[#161d28]" onclick="toggleMissionInfo()">
+                <span>Mission Info</span>
+                <span class="material-symbols-outlined text-[13px]">expand_more</span>
+            </button>
+            <div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#10b981]/10 border border-[#10b981]/25 text-[11px] font-mono-clean text-[#6ee7b7]">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+                <span id="engine-status-text">AI ENGINE: READY (7x7 Lee + CLAHE)</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <button class="flex items-center gap-1.5 text-xs text-[#d1d5db] bg-[#161d28] hover:bg-[#1f2937] px-2.5 py-1 border border-[#1e2634] rounded transition-colors" onclick="switchTab('ingest')" type="button">
+                <span class="material-symbols-outlined text-[14px] text-[#38bdf8]">upload_file</span>
+                <span>Upload & Ingest</span>
+            </button>
+            <button class="flex items-center gap-1.5 text-xs text-[#0c1017] bg-[#38bdf8] hover:bg-[#7bd0ff] font-medium px-2.5 py-1 rounded transition-colors" onclick="loadFullSurveyMission()" type="button">
+                <span class="material-symbols-outlined text-[14px]">route</span>
+                <span>Run Transect Line</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Sub-header context banner (Collapsible Mission Info) -->
+    <div id="mission-info-bar" class="h-[34px] px-4 bg-[#0d141e] border-b border-[#1e2634] flex items-center text-[#9ca3af] font-mono-clean text-[11px] overflow-x-auto whitespace-nowrap shrink-0 transition-all duration-200">
+        <div class="flex items-center gap-2 pr-4 border-r border-[#1e2634]"><span class="text-[#6b7280] uppercase">VEHICLE</span><span class="text-white">AUV-ORCA-IV</span></div>
+        <div class="flex items-center gap-2 px-4 border-r border-[#1e2634]"><span class="text-[#6b7280] uppercase">DEPTH</span><span class="text-white">138 - 144 m</span></div>
+        <div class="flex items-center gap-2 px-4 border-r border-[#1e2634]"><span class="text-[#6b7280] uppercase">DATE</span><span class="text-white">2026-09-20 UTC</span></div>
+        <div class="flex items-center gap-2 px-4 border-r border-[#1e2634]"><span class="text-[#6b7280] uppercase">SURVEY AREA</span><span class="text-white">Bay of Bengal Coastal Shelf</span></div>
+        <div class="flex items-center gap-2 pl-4"><span class="text-[#6b7280] uppercase">SENSOR FREQ</span><span class="text-[#38bdf8]">900 kHz Dual SSS</span></div>
+    </div>
+
+    <!-- WORKSPACE WRAPPER: Rail + Main Viewport + Optional Drawer -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- REGION 2: Thin Left Rail (210px wide) -->
+        <aside class="w-[210px] shrink-0 bg-[#0c1017] border-r border-[#1e2634] flex flex-col justify-between p-3 select-none overflow-y-auto">
+            <div class="flex flex-col gap-4">
+                
+                <!-- 4-item clean navigation menu -->
+                <nav class="flex flex-col gap-0.5">
+                    <button class="flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-white bg-[#161e2b] border-l-2 border-[#38bdf8] transition-colors w-full text-left" id="tab-waterfall" onclick="switchTab('waterfall')">
+                        <span class="material-symbols-outlined text-[15px] text-[#38bdf8]">waterfall_chart</span>
+                        <span>Sonar Waterfall</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-[#9ca3af] hover:text-white hover:bg-[#131822] transition-colors w-full text-left" id="tab-map" onclick="switchTab('map')">
+                        <span class="material-symbols-outlined text-[15px]">map</span>
+                        <span>Map View</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-[#9ca3af] hover:text-white hover:bg-[#131822] transition-colors w-full text-left" id="tab-reports" onclick="switchTab('reports')">
+                        <span class="material-symbols-outlined text-[15px]">description</span>
+                        <span>Reports & Audit</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-[#9ca3af] hover:text-white hover:bg-[#131822] transition-colors w-full text-left" id="tab-ingest" onclick="switchTab('ingest')">
+                        <span class="material-symbols-outlined text-[15px]">input</span>
+                        <span>Data Ingest</span>
+                    </button>
+                </nav>
+
+                <!-- Acoustic Sample Presets -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="text-[10px] uppercase font-semibold text-[#4b5563] tracking-wider px-2">Acoustic Presets</div>
+                    <div class="grid grid-cols-2 gap-1 px-1">
+                        <button class="px-2 py-1.5 text-[11px] font-medium text-[#d1d5db] bg-[#131822] hover:bg-[#1a2230] hover:border-[#38bdf8] border border-[#1e2634] rounded text-left transition-colors flex items-center gap-1" onclick="loadSampleScan('shipwreck')">
+                            <span>🚢</span> Wreck
+                        </button>
+                        <button class="px-2 py-1.5 text-[11px] font-medium text-[#d1d5db] bg-[#131822] hover:bg-[#1a2230] hover:border-[#38bdf8] border border-[#1e2634] rounded text-left transition-colors flex items-center gap-1" onclick="loadSampleScan('ghost_net')">
+                            <span>🕸️</span> Net
+                        </button>
+                        <button class="px-2 py-1.5 text-[11px] font-medium text-[#d1d5db] bg-[#131822] hover:bg-[#1a2230] hover:border-[#38bdf8] border border-[#1e2634] rounded text-left transition-colors flex items-center gap-1" onclick="loadSampleScan('submarine_pipeline')">
+                            <span>📏</span> Pipe
+                        </button>
+                        <button class="px-2 py-1.5 text-[11px] font-medium text-[#d1d5db] bg-[#131822] hover:bg-[#1a2230] hover:border-[#38bdf8] border border-[#1e2634] rounded text-left transition-colors flex items-center gap-1" onclick="loadSampleScan('mine_cylinder')">
+                            <span>💣</span> Drum
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Signal Calibration & Denoising -->
+                <div class="flex flex-col gap-1.5 px-1">
+                    <div class="text-[10px] uppercase font-semibold text-[#4b5563] tracking-wider px-1">Signal Processing</div>
+                    <div class="p-2 bg-[#0f141d] border border-[#1e2634] rounded flex flex-col gap-2">
+                        <div>
+                            <div class="text-[10px] text-[#6b7280] uppercase mb-1">Color Palette</div>
+                            <select id="palette-select" class="w-full bg-[#090c12] border border-[#1e2634] text-white text-[11px] p-1 rounded font-sans focus:outline-none focus:border-[#38bdf8]">
+                                <option value="copper" selected>Warm Copper (Standard)</option>
+                                <option value="amber">High-Contrast Amber</option>
+                                <option value="emerald">Deep Emerald Ocean</option>
+                                <option value="grayscale">Raw Grayscale</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-[#9ca3af]">Lee Filter (7x7)</span>
+                            <input type="checkbox" id="filter-toggle" checked class="w-3.5 h-3.5 accent-[#38bdf8] cursor-pointer"/>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] text-[#6b7280] mb-0.5">
+                                <span>Confidence</span>
+                                <span id="conf-val" class="font-mono-clean text-[#38bdf8]">35%</span>
+                            </div>
+                            <input type="range" id="conf-slider" min="10" max="95" value="35" class="w-full accent-[#38bdf8] h-1 bg-[#1e2634] rounded cursor-pointer"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transect survey logs -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="text-[10px] uppercase font-semibold text-[#4b5563] tracking-wider px-2">Transects</div>
+                    <div class="flex flex-col gap-1">
+                        <div class="px-2 py-1.5 rounded bg-[#131924] border border-[#1e2634]/60 cursor-pointer hover:border-[#38bdf8] transition-colors" onclick="loadFullSurveyMission()">
+                            <div class="text-xs text-white font-medium flex items-center justify-between">
+                                <span>Transect 04A (Live)</span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+                            </div>
+                            <div class="text-[10px] text-[#6b7280] mt-0.5 font-mono-clean">Today, 14:12 UTC</div>
+                        </div>
+                        <div class="px-2 py-1.5 rounded hover:bg-[#131822] cursor-pointer transition-colors" onclick="loadSampleScan('shipwreck')">
+                            <div class="text-xs text-[#9ca3af]">Transect 03B (Wreck)</div>
+                            <div class="text-[10px] text-[#4b5563] mt-0.5 font-mono-clean">Today, 12:40 UTC</div>
+                        </div>
+                        <div class="px-2 py-1.5 rounded hover:bg-[#131822] cursor-pointer transition-colors" onclick="loadSampleScan('ghost_net')">
+                            <div class="text-xs text-[#9ca3af]">Transect 02A (Reef)</div>
+                            <div class="text-[10px] text-[#4b5563] mt-0.5 font-mono-clean">Today, 10:15 UTC</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="px-2 py-1 text-[10px] font-mono-clean text-[#4b5563] flex justify-between items-center border-t border-[#1e2634] pt-2">
+                <span>AUV-ORCA-IV</span>
+                <span class="text-[#10b981]">CONNECTED</span>
+            </div>
+        </aside>
+
+        <!-- REGION 3: Main Central Viewport -->
+        <main class="flex-1 flex flex-col min-w-0 bg-[#090d13] relative overflow-hidden">
+            
+            <!-- VIEW 1: Sonar Waterfall Canvas (Screen 37fa4c23fa8942e381802d163ceaf2d1) -->
+            <div class="flex-1 flex flex-col h-full view-content active" id="view-waterfall">
+                <div class="flex-1 relative acoustic-grain overflow-hidden flex items-stretch cursor-crosshair">
+                    
+                    <!-- Port Swath Scale -->
+                    <div class="w-12 shrink-0 bg-[#070a0f] border-r border-[#1a222e] flex flex-col justify-between p-2 text-[9px] font-mono-clean text-[#4b5563]">
+                        <span>PORT 50m</span>
+                        <span>25m</span>
+                        <span>0m</span>
+                    </div>
+
+                    <!-- Waterfall Canvas Container -->
+                    <div class="flex-1 flex items-center justify-center relative overflow-hidden" id="canvas-container">
+                        <canvas id="waterfall-canvas" width="640" height="640" class="max-w-full max-h-full object-contain"></canvas>
+                        <div id="scan-line" class="scan-line"></div>
+                    </div>
+
+                    <!-- Starboard Swath Scale -->
+                    <div class="w-12 shrink-0 bg-[#070a0f] border-l border-[#1a222e] flex flex-col justify-between p-2 text-[9px] font-mono-clean text-[#4b5563] text-right">
+                        <span>0m</span>
+                        <span>25m</span>
+                        <span>STBD 50m</span>
+                    </div>
+                </div>
+
+                <!-- Bottom Minimal Scrubber Bar -->
+                <div class="h-10 shrink-0 bg-[#0e131b] border-t border-[#1e2634] px-4 flex items-center gap-4 select-none justify-between">
+                    <div class="flex items-center gap-3">
+                        <button class="text-[#9ca3af] hover:text-white transition-colors" id="toggle-stream-btn" onclick="toggleStreamSimulation()" title="Play / Pause" type="button">
+                            <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                        </button>
+                        <div class="text-[11px] font-mono-clean text-[#6b7280]">
+                            PING RATE: <span class="text-[#d1d5db]">10 Hz</span> | SWATH: <span class="text-[#d1d5db]">100m</span>
+                        </div>
+                    </div>
+
+                    <!-- Horizontal Scrubber Track -->
+                    <div class="flex-1 max-w-md mx-4 relative h-1 bg-[#1a222f] rounded-full cursor-pointer group flex items-center">
+                        <div class="h-full bg-[#38bdf8] rounded-full" style="width: 28%;"></div>
+                        <div class="absolute w-2.5 h-2.5 bg-white rounded-full -ml-1 border border-[#38bdf8] shadow pointer-events-none" style="left: 28%;"></div>
+                    </div>
+
+                    <!-- Single Clean Timeline Indicator -->
+                    <div class="text-[11px] font-mono-clean text-[#9ca3af] shrink-0">
+                        00:14:28 / 01:20:00
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: Leaflet GIS Map (Screen 72fe2e50eef1492081147ebef33dcacb) -->
+            <div class="flex-1 w-full h-full view-content hidden" id="view-map">
+                <div id="leaflet-map" class="w-full h-full"></div>
+            </div>
+
+            <!-- VIEW 3: Reports View (Screen 6c18d0a82723491aae91cee60784c47b) -->
+            <div class="flex-1 w-full h-full view-content hidden overflow-y-auto" id="view-reports">
+                <div class="flex flex-col w-full h-full select-none overflow-y-auto p-6">
+                    <div class="flex items-center justify-between pb-4 border-b border-[#1e2634]">
+                        <div>
+                            <h1 class="text-sm font-semibold text-white tracking-tight">Ingested Transect Logs</h1>
+                            <p class="text-[11px] font-mono-clean text-[#6b7280] mt-0.5">ACOUSTIC BACKSCATTER RUNS • MISSION ID: SURV-2026-NIOT</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="flex items-center gap-1.5 px-2.5 py-1 bg-[#161d28] hover:bg-[#1f2937] text-xs font-mono-clean text-[#d1d5db] border border-[#1e2634] rounded transition-colors" onclick="exportCSV()">
+                                <span class="material-symbols-outlined text-[13px] text-[#38bdf8]">table_chart</span>
+                                <span>Export CSV</span>
+                            </button>
+                            <button class="flex items-center gap-1.5 px-2.5 py-1 bg-[#161d28] hover:bg-[#1f2937] text-xs font-mono-clean text-[#d1d5db] border border-[#1e2634] rounded transition-colors" onclick="exportGeoJSON()">
+                                <span class="material-symbols-outlined text-[13px] text-[#38bdf8]">public</span>
+                                <span>Export GeoJSON</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 bg-[#090c12] border border-[#1e2634] rounded overflow-hidden">
+                        <table class="w-full text-left border-collapse font-mono-clean text-xs">
+                            <thead>
+                                <tr class="border-b border-[#1e2634] text-[10px] text-[#6b7280] uppercase tracking-wider bg-[#0f141d]">
+                                    <th class="py-2.5 px-4 font-normal">Target ID & Classification</th>
+                                    <th class="py-2.5 px-4 font-normal">Confidence</th>
+                                    <th class="py-2.5 px-4 font-normal">Position (Lat / Lon)</th>
+                                    <th class="py-2.5 px-4 font-normal">Length × Width</th>
+                                    <th class="py-2.5 px-4 font-normal">Est Height</th>
+                                    <th class="py-2.5 px-4 text-right font-normal">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#1e2634]/40 text-[#d1d5db]" id="reports-table-body">
+                                <tr>
+                                    <td colspan="6" class="text-center py-8 text-[#4b5563]">No targets logged yet. Run an analysis above.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 4: Upload & Ingest Console (Screen c86a1d6c27d14e7cb896a1f0c6ebe59c) -->
+            <div class="flex-1 w-full h-full view-content hidden overflow-y-auto p-6" id="view-ingest">
+                <div class="w-full max-w-5xl mx-auto flex flex-col gap-6">
+                    <!-- Title Bar -->
+                    <div class="flex items-center justify-between pb-4 border-b border-[#1e2634]">
+                        <div>
+                            <h1 class="text-sm font-semibold text-white uppercase tracking-wide">Data Ingest & Preprocessing Pipeline</h1>
+                            <p class="text-[11px] font-mono-clean text-[#6b7280] mt-0.5">Batch verification, acoustic ping decoding, and sensor cross-referencing</p>
+                        </div>
+                        <span class="text-[11px] font-mono-clean text-[#6b7280]">INGEST PROTOCOL: <span class="text-white">XTF-v2.1 / WGS-84</span></span>
+                    </div>
+
+                    <!-- Drop Zone Frame -->
+                    <input type="file" id="ingest-file-input" accept="image/*" class="hidden"/>
+                    <div class="w-full p-8 border-2 border-dashed border-[#1e2634] hover:border-[#38bdf8] bg-[#090c12] rounded flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors" onclick="document.getElementById('ingest-file-input').click()">
+                        <span class="material-symbols-outlined text-[#38bdf8] text-[36px]">upload_file</span>
+                        <div class="text-center">
+                            <p class="text-sm font-medium text-white">Drop sonar log (.xtf / .jpg / .tiff) or click to browse</p>
+                            <span class="text-xs font-mono-clean text-[#6b7280]">Raw binary telemetry paired with synchronized positioning headers</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 w-full max-w-md mt-2">
+                            <div class="bg-[#131924] px-3 py-2 rounded flex items-center justify-between text-xs">
+                                <span class="text-[#d1d5db] font-mono-clean">Sonar Log (.xtf / .sgy)</span>
+                                <span class="text-[#38bdf8] text-[10px] font-mono-clean">READY</span>
+                            </div>
+                            <div class="bg-[#131924] px-3 py-2 rounded flex items-center justify-between text-xs">
+                                <span class="text-[#d1d5db] font-mono-clean">Nav Pings (.csv)</span>
+                                <span class="text-[#10b981] text-[10px] font-mono-clean">STAGED</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Pipeline Status -->
+                    <div class="bg-[#0f141d] border border-[#1e2634] p-4 rounded flex flex-col gap-3">
+                        <div class="flex items-center justify-between text-xs font-mono-clean text-white">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-[#38bdf8] animate-pulse"></span>
+                                <span>Analyzing ping stream — 9,500 points</span>
+                            </div>
+                            <span class="text-[#38bdf8]">REAL-TIME 10 Hz</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-[#1a222f] rounded-full overflow-hidden">
+                            <div class="h-full bg-[#38bdf8] rounded-full" style="width: 100%;"></div>
+                        </div>
+                        <div class="flex justify-between text-[11px] font-mono-clean text-[#6b7280]">
+                            <span>7x7 Lee Denoising & CLAHE Normalization Active</span>
+                            <span>LATENCY: 13.5ms (14.1 FPS)</span>
+                        </div>
+                    </div>
+
+                    <!-- Diagnostic Matrix -->
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="bg-[#0f141d] p-3 border border-[#1e2634] rounded flex flex-col gap-1">
+                            <span class="text-[9px] uppercase font-mono-clean text-[#6b7280]">Raw Sonar Pings</span>
+                            <span class="text-base font-semibold font-mono-clean text-white">9,500</span>
+                            <span class="text-[10px] text-[#4b5563]">Transduced pulses</span>
+                        </div>
+                        <div class="bg-[#0f141d] p-3 border border-[#1e2634] rounded flex flex-col gap-1">
+                            <span class="text-[9px] uppercase font-mono-clean text-[#6b7280]">Cross-Track Swath</span>
+                            <span class="text-base font-semibold font-mono-clean text-white">100.0 <span class="text-[#38bdf8] text-xs">m</span></span>
+                            <span class="text-[10px] text-[#4b5563]">50m Port / 50m Stbd</span>
+                        </div>
+                        <div class="bg-[#0f141d] p-3 border border-[#1e2634] rounded flex flex-col gap-1">
+                            <span class="text-[9px] uppercase font-mono-clean text-[#6b7280]">Position Fix Sync</span>
+                            <span class="text-base font-semibold font-mono-clean text-[#10b981]">99.98%</span>
+                            <span class="text-[10px] text-[#4b5563]">Interpolated GPS/DVL</span>
+                        </div>
+                        <div class="bg-[#0f141d] p-3 border border-[#1e2634] rounded flex flex-col gap-1">
+                            <span class="text-[9px] uppercase font-mono-clean text-[#6b7280]">Sound Velocity</span>
+                            <span class="text-base font-semibold font-mono-clean text-white">1,500 <span class="text-[#38bdf8] text-xs">m/s</span></span>
+                            <span class="text-[10px] text-[#4b5563]">CTD acoustic profile</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- REGION 4: Slide-out Drawer / Detail Panel (320px wide) -->
+        <aside class="w-[320px] shrink-0 bg-[#0f141d] border-l border-[#1e2634] flex flex-col justify-between transition-all duration-200 z-20" id="detailDrawer">
+            <!-- Drawer Header & Content -->
+            <div class="p-4 flex flex-col gap-4">
+                <div class="flex items-center justify-between pb-2 border-b border-[#1e2634]">
+                    <div class="text-xs font-medium text-white tracking-wide">Target Inspection</div>
+                    <button class="text-[#6b7280] hover:text-white transition-colors" onclick="closeDrawer()" title="Close">
+                        <span class="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                </div>
+
+                <!-- Clean Cropped Greyscale Acoustic Thumbnail -->
+                <div class="w-full h-28 bg-[#090c12] border border-[#1e2634] rounded flex items-center justify-center relative overflow-hidden">
+                    <img id="drawerThumbImg" class="w-full h-full object-contain opacity-90" src="" alt="Target Crop"/>
+                    <span class="absolute bottom-1.5 right-2 text-[9px] font-mono-clean text-[#4b5563]">900 kHz SSS</span>
+                </div>
+
+                <!-- 5 Sparse Data Fields -->
+                <div class="flex flex-col gap-3.5 pt-1">
+                    <div>
+                        <div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Classification</div>
+                        <div class="text-xs text-white font-medium mt-0.5" id="drawerClass">Exposed Pipeline</div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between text-[10px]">
+                            <span class="text-[#6b7280] uppercase tracking-wider">Confidence</span>
+                            <span class="font-mono-clean text-[#f59e0b] font-medium" id="drawerConfText">94%</span>
+                        </div>
+                        <div class="w-full h-1 bg-[#1a222f] rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-[#f59e0b] rounded-full" id="drawerConfBar" style="width: 94%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Coordinates</div>
+                        <div class="text-xs font-mono-clean text-[#d1d5db] mt-0.5" id="drawerCoords">12.923400° N, 80.245100° E</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Length</div>
+                            <div class="text-xs font-mono-clean text-white mt-0.5" id="drawerLength">14.8 m</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Est Height</div>
+                            <div class="text-xs font-mono-clean text-white mt-0.5" id="drawerDepth">2.4 m</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Acoustic Physics Status</div>
+                        <div class="mt-1" id="drawerPhysicsBadge">
+                            <span class="text-[10px] font-mono-clean px-2 py-0.5 rounded bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/30">
+                                ✅ Highlight & Shadow Verified
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawer Action Button -->
+            <div class="p-4 border-t border-[#1e2634]">
+                <button class="w-full py-1.5 px-3 border border-[#38bdf8] text-[#38bdf8] hover:bg-[#38bdf8]/10 text-xs font-medium rounded transition-colors text-center" onclick="exportCSV()" type="button">
+                    Export Detection
+                </button>
+            </div>
+        </aside>
+
+    </div>
+
+    <input type="hidden" id="vessel-lat" value="12.9234"/>
+    <input type="hidden" id="vessel-lon" value="80.2451"/>
+    <input type="hidden" id="vessel-heading" value="45.0"/>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js/waterfall.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

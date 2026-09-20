@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Unit test / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Large Datasets and Temp Files
+data/
+*.xtf
+*.sgy
+*.raw
+runs/
+
+# Antigravity IDE / OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

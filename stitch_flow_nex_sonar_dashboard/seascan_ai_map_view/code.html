@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_dashboard" name="shell-type"/>
+<title>SeaScan AI - Minimalist Acoustic Workspace</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0c1017;
+        color: #d1d5db;
+        font-family: 'Inter', sans-serif;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+    }
+    .font-mono-clean {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    /* Clean subtle sonar texture without heavy gradients */
+    .acoustic-grain {
+      background-color: #0b0f15;
+      background-image: 
+        radial-gradient(ellipse at 50% 50%, rgba(26, 36, 48, 0.35) 0%, rgba(11, 15, 21, 0.95) 100%),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 4px);
+    }
+    .water-line {
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.5) 50%, rgba(56, 189, 248, 0.15) 100%);
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden select-none flex flex-col bg-[#0c1017] text-[#9ca3af]">
+<!-- REGION 1: Ultra-thin Top Bar (height 40px) -->
+<header class="h-10 shrink-0 bg-[#0e131b] border-b border-[#1e2634] px-4 flex items-center justify-between z-30">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#38bdf8]"></span>
+<span class="text-sm font-medium text-white tracking-tight">SeaScan AI</span>
+</div>
+<span class="text-[#374151]">/</span>
+<span class="text-xs text-[#9ca3af]">SURV-2025-04A</span>
+<button class="flex items-center gap-1 text-[11px] text-[#6b7280] hover:text-[#d1d5db] transition-colors ml-1 px-1.5 py-0.5 rounded hover:bg-[#161d28]">
+<span>Mission Info</span>
+<span class="material-symbols-outlined text-[13px]">expand_more</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-1.5 text-xs text-[#d1d5db] bg-[#161d28] hover:bg-[#1f2937] px-2.5 py-1 border border-[#1e2634] rounded transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px] text-[#38bdf8]">upload_file</span>
+<span>Upload Log</span>
+</button>
+</div>
+</header>
+<!-- WORKSPACE WRAPPER: Rail + Main Viewport + Optional Drawer -->
+<div class="flex-1 flex overflow-hidden relative">
+<!-- REGION 2: Thin Left Rail (200px wide) -->
+<aside class="w-[200px] shrink-0 bg-[#0c1017] border-r border-[#1e2634] flex flex-col justify-between p-3 select-none">
+<div class="flex flex-col gap-6">
+<!-- 3-item clean menu -->
+<nav class="flex flex-col gap-0.5">
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium text-white bg-[#161e2b] border-l-2 border-[#38bdf8] transition-colors" href="#">
+<span class="material-symbols-outlined text-[15px] text-[#38bdf8]">waterfall_chart</span>
+<span>Sonar Waterfall</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-[#9ca3af] hover:text-white hover:bg-[#131822] transition-colors" href="#">
+<span class="material-symbols-outlined text-[15px]">map</span>
+<span>Map View</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-[#9ca3af] hover:text-white hover:bg-[#131822] transition-colors" href="#">
+<span class="material-symbols-outlined text-[15px]">description</span>
+<span>Reports</span>
+</a>
+</nav>
+<!-- Transect survey logs -->
+<div class="flex flex-col gap-2">
+<div class="text-[10px] uppercase font-semibold text-[#4b5563] tracking-wider px-2">Transects</div>
+<div class="flex flex-col gap-1">
+<div class="px-2 py-1.5 rounded bg-[#131924] border border-[#1e2634]/60 cursor-pointer">
+<div class="text-xs text-white font-medium flex items-center justify-between">
+<span>Transect 04A</span>
+<span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+</div>
+<div class="text-[10px] text-[#6b7280] mt-0.5">Today, 14:12 UTC</div>
+</div>
+<div class="px-2 py-1.5 rounded hover:bg-[#131822] cursor-pointer transition-colors">
+<div class="text-xs text-[#9ca3af]">Transect 03B</div>
+<div class="text-[10px] text-[#4b5563] mt-0.5">Today, 12:40 UTC</div>
+</div>
+<div class="px-2 py-1.5 rounded hover:bg-[#131822] cursor-pointer transition-colors">
+<div class="text-xs text-[#9ca3af]">Transect 02A</div>
+<div class="text-[10px] text-[#4b5563] mt-0.5">Today, 10:15 UTC</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-2 py-1 text-[10px] text-[#4b5563]">
+        AUV-ORCA-IV Connected
+      </div>
+</aside>
+<!-- REGION 3: Main Central Viewport (>80% weight) -->
+<main class="flex-1 flex flex-col min-w-0 bg-[#090d13] relative overflow-hidden"><div class="flex flex-col w-full h-full min-h-0 relative">
+<!-- Map Canvas & Telemetry Overlay Surface -->
+<div class="relative w-full h-full min-h-0 bg-surface flex flex-col overflow-hidden select-none">
+<!-- Top Telemetry Ribbon / Coordinate HUD -->
+<div class="absolute top-space-md left-space-md z-10 flex items-center gap-gutter pointer-events-none">
+<div class="bg-surface-container-low/95 px-space-md py-space-xs flex items-center gap-space-lg pointer-events-auto">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">AUV Real-Time Nav</span>
+<span class="font-mono-metric-md text-mono-metric-md text-on-surface">44° 18.294' N   063° 32.118' W</span>
+</div>
+<div class="h-4 w-px bg-surface-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Bathymetry Floor</span>
+<span class="font-mono-metric-md text-mono-metric-md text-secondary">138.4 m</span>
+</div>
+<div class="h-4 w-px bg-surface-variant"></div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Speed Over Ground</span>
+<span class="font-mono-metric-md text-mono-metric-md text-on-surface">3.2 kn</span>
+</div>
+<div class="h-4 w-px bg-surface-variant"></div>
+<div class="flex items-center gap-space-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span class="font-label-code text-label-code text-tertiary uppercase">INS Fix: RTK Lock</span>
+</div>
+</div>
+</div>
+<!-- Minimalist Map Controls (Top Left Stack under Telemetry) -->
+<div class="absolute top-16 left-space-md z-10 flex flex-col bg-surface-container-low select-none">
+<button aria-label="Zoom In" class="w-7 h-7 flex items-center justify-center bg-surface-container-low hover:bg-surface-container-high text-on-surface transition-colors" id="zoomInBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+<div class="w-full h-px bg-surface-variant"></div>
+<button aria-label="Zoom Out" class="w-7 h-7 flex items-center justify-center bg-surface-container-low hover:bg-surface-container-high text-on-surface transition-colors" id="zoomOutBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<div class="w-full h-px bg-surface-variant"></div>
+<button aria-label="Center on Vehicle" class="w-7 h-7 flex items-center justify-center bg-surface-container-low hover:bg-surface-container-high text-outline hover:text-on-surface transition-colors" id="recenterBtn" title="Center on Vehicle" type="button">
+<span class="material-symbols-outlined text-[15px]">near_me</span>
+</button>
+</div>
+<!-- Hydrographic Depth Contour Basemap (SVG Vector Engine) -->
+<div class="relative w-full h-full overflow-hidden bg-[#0a0f17] cursor-grab active:cursor-grabbing" id="mapViewport">
+<svg class="w-full h-full block" preserveaspectratio="xMidYMid slice" viewbox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<!-- Grid Reticle Pattern (100m survey spacing) -->
+<pattern height="80" id="surveyGrid" patternunits="userSpaceOnUse" width="80">
+<path d="M 80 0 L 0 0 0 80" fill="none" stroke="#151d29" stroke-width="0.75"></path>
+<circle cx="80" cy="80" fill="#1e293b" r="1"></circle>
+</pattern>
+</defs>
+<!-- Basemap Background Matrix -->
+<rect fill="#090e15" height="100%" width="100%"></rect>
+<rect fill="url(#surveyGrid)" height="100%" width="100%"></rect>
+<!-- Bathymetric Isobaths (Depth Contours) -->
+<g fill="none" stroke="#141c28" stroke-linecap="round" stroke-width="1">
+<!-- 110m Contour -->
+<path d="M -50,140 C 180,120 280,210 460,180 C 640,150 780,220 980,190 C 1080,175 1180,210 1280,200"></path>
+<!-- 120m Contour -->
+<path d="M -50,260 C 140,240 260,330 480,290 C 700,250 820,340 1020,300 C 1140,270 1220,310 1280,310"></path>
+<!-- 130m Contour -->
+<path d="M -50,380 C 120,360 250,440 450,410 C 670,380 810,470 1010,430 C 1120,400 1210,430 1280,420"></path>
+<!-- 140m Contour -->
+<path d="M -50,510 C 150,490 270,580 490,540 C 710,500 840,600 1050,560 C 1160,530 1240,560 1280,550"></path>
+<!-- 150m Contour -->
+<path d="M -50,650 C 130,620 240,710 440,670 C 660,630 790,720 990,680 C 1110,650 1190,680 1280,670"></path>
+</g>
+<!-- Subtle Depth Elevation Labels along isobaths -->
+<g class="font-label-code text-[9px] select-none pointer-events-none" fill="#243042">
+<text x="70" y="132">-110m</text>
+<text x="600" y="165">-110m</text>
+<text x="70" y="252">-120m</text>
+<text x="630" y="272">-120m</text>
+<text x="70" y="372">-130m</text>
+<text x="620" y="392">-130m</text>
+<text x="70" y="502">-140m</text>
+<text x="640" y="522">-140m</text>
+<text x="70" y="642">-150m</text>
+<text x="610" y="652">-150m</text>
+</g>
+<!-- Swath Sonar Coverage Corridor (Sidescan footprint) -->
+<polygon fill="#00354a" opacity="0.14" points="120,700 340,520 480,390 620,290 840,160 880,185 660,315 520,415 380,545 160,725"></polygon>
+<!-- Historical Survey Transect Tracks (02A, 03B) in low-opacity slate -->
+<g fill="none" stroke="#1d2736" stroke-dasharray="3,3" stroke-width="1.2">
+<!-- Transect 02A -->
+<path d="M 60,780 L 760,200"></path>
+<!-- Transect 03B -->
+<path d="M 100,760 L 800,180"></path>
+</g>
+<!-- ACTIVE TRANSECT TRACK: 04A (Crisp Primary Cyan Vector) -->
+<g id="transectLine">
+<!-- Vessel acoustic centerline trajectory -->
+<path d="M 140,712 L 360,532 L 500,402 L 640,302 L 860,172" fill="none" stroke="#38bdf8" stroke-linecap="round" stroke-width="1.5"></path>
+<!-- Heading tick markers -->
+<line stroke="#7bd0ff" stroke-width="1" x1="356" x2="364" y1="528" y2="536"></line>
+<line stroke="#7bd0ff" stroke-width="1" x1="496" x2="504" y1="398" y2="406"></line>
+<line stroke="#7bd0ff" stroke-width="1" x1="636" x2="644" y1="298" y2="306"></line>
+<!-- AUV ORCA-IV Current Real-Time Position Beacon -->
+<g transform="translate(860, 172)">
+<!-- Outer Range Pulse Ring (Zero blur, static surgical circle) -->
+<circle cx="0" cy="0" fill="none" opacity="0.6" r="14" stroke="#38bdf8" stroke-dasharray="2,2" stroke-width="0.75"></circle>
+<!-- Heading Vector -->
+<line stroke="#38bdf8" stroke-linecap="round" stroke-width="1.5" x1="0" x2="16" y1="0" y2="-12"></line>
+<!-- Vehicle Pivot -->
+<polygon fill="#7bd0ff" points="0,-6 5,5 0,3 -5,5" stroke="#090e15" stroke-width="1" transform="rotate(53)"></polygon>
+</g>
+</g>
+<!-- ACOUSTIC ANOMALY DETECTIONS (Strict Minimalist Color Coded Dots) -->
+<!-- Detection Pin 1: Target D-0107 (Exposed Pipeline - High Confidence Alert, Selected) -->
+<g class="cursor-pointer" id="targetPipeline" onclick="openDrawer('pipeline')">
+<!-- Selection indicator reticle -->
+<circle cx="500" cy="402" fill="none" opacity="0.5" r="10" stroke="#f59e0b" stroke-width="1"></circle>
+<circle cx="500" cy="402" fill="none" r="7" stroke="#090e15" stroke-width="1"></circle>
+<!-- Amber Target Dot (8px) -->
+<circle cx="500" cy="402" fill="#f59e0b" r="4"></circle>
+</g>
+<!-- Detection Pin 2: Target D-0106 (Discarded Ghost Net - Critical Alert Red) -->
+<g class="cursor-pointer" id="targetNet" onclick="openDrawer('net')">
+<circle cx="360" cy="532" fill="#ef4444" r="4" stroke="#090e15" stroke-width="1"></circle>
+</g>
+<!-- Detection Pin 3: Target D-0108 (Natural Bedrock Ridge - Green Nominal) -->
+<g class="cursor-pointer" id="targetRidge" onclick="openDrawer('ridge')">
+<circle cx="640" cy="302" fill="#10b981" r="4" stroke="#090e15" stroke-width="1"></circle>
+</g>
+<!-- Detection Pin 4: Target D-0105 (Glacial Boulder - Green Nominal) -->
+<g class="cursor-pointer" id="targetBoulder" onclick="openDrawer('boulder')">
+<circle cx="280" cy="600" fill="#10b981" r="3.5" stroke="#090e15" stroke-width="1"></circle>
+</g>
+<!-- Detection Pin 5: Target D-0109 (Linear Debris - Amber 72%) -->
+<g class="cursor-pointer" id="targetDebris" onclick="openDrawer('pipeline')">
+<circle cx="750" cy="235" fill="#f59e0b" r="3.5" stroke="#090e15" stroke-width="1"></circle>
+</g>
+</svg>
+</div>
+<!-- Bottom Status Strip / Hydrographic Grid Bar -->
+<div class="h-6 w-full bg-surface-container-lowest flex items-center justify-between px-space-md z-10 select-none">
+<div class="flex items-center gap-space-lg">
+<span class="font-label-code text-label-code text-outline">DATUM: WGS 84 / UTM ZONE 20N</span>
+<span class="font-label-code text-label-code text-outline">ACOUSTIC FREQ: 900 kHz SIDESCAN</span>
+<span class="font-label-code text-label-code text-outline">SCALE: 1:2500</span>
+</div>
+<div class="flex items-center gap-space-md font-label-code text-label-code">
+<span class="text-outline">TARGETS:</span>
+<span class="text-error font-medium">1 HIGH</span>
+<span class="text-[#f59e0b] font-medium">2 MED</span>
+<span class="text-tertiary font-medium">2 VERIFIED</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Ensure synchronous interaction integration with App Shell Target Inspection Drawer
+  document.addEventListener('DOMContentLoaded', () => {
+    // Zoom control click micro-interactions
+    const mapViewport = document.getElementById('mapViewport');
+    const svgElem = mapViewport ? mapViewport.querySelector('svg') : null;
+    let currentScale = 1.0;
+
+    const zoomIn = document.getElementById('zoomInBtn');
+    const zoomOut = document.getElementById('zoomOutBtn');
+    const recenter = document.getElementById('recenterBtn');
+
+    if (zoomIn && svgElem) {
+      zoomIn.addEventListener('click', () => {
+        if (currentScale < 2.0) {
+          currentScale += 0.2;
+          svgElem.style.transform = `scale(${currentScale})`;
+          svgElem.style.transformOrigin = 'center center';
+          svgElem.style.transition = 'transform 0.15s ease-out';
+        }
+      });
+    }
+
+    if (zoomOut && svgElem) {
+      zoomOut.addEventListener('click', () => {
+        if (currentScale > 0.8) {
+          currentScale -= 0.2;
+          svgElem.style.transform = `scale(${currentScale})`;
+          svgElem.style.transformOrigin = 'center center';
+          svgElem.style.transition = 'transform 0.15s ease-out';
+        }
+      });
+    }
+
+    if (recenter && svgElem) {
+      recenter.addEventListener('click', () => {
+        currentScale = 1.0;
+        svgElem.style.transform = 'scale(1.0)';
+        svgElem.style.transition = 'transform 0.2s ease-out';
+      });
+    }
+  });
+</script></main>
+<!-- Slide-out Drawer / Detail Panel (320px wide) -->
+<aside class="w-[320px] shrink-0 bg-[#0f141d] border-l border-[#1e2634] flex flex-col justify-between transition-all duration-200 z-20" id="detailDrawer">
+<!-- Drawer Header & Content -->
+<div class="p-4 flex flex-col gap-4">
+<div class="flex items-center justify-between pb-2 border-b border-[#1e2634]">
+<div class="text-xs font-medium text-white tracking-wide">Target Inspection</div>
+<button class="text-[#6b7280] hover:text-white transition-colors" onclick="closeDrawer()" title="Close">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Clean Cropped Greyscale Acoustic Thumbnail -->
+<div class="w-full h-28 bg-[#090c12] border border-[#1e2634] rounded flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-25" style="background: radial-gradient(circle at center, rgba(255,255,255,0.12) 0%, transparent 70%);"></div>
+<!-- Greyscale backscatter highlight & shadow -->
+<div class="relative flex flex-col items-center">
+<div class="w-28 h-2 bg-white/90 rounded-sm"></div>
+<div class="w-32 h-3 bg-black/90 mt-1"></div>
+</div>
+<span class="absolute bottom-1.5 right-2 text-[9px] font-mono-clean text-[#4b5563]">900 kHz</span>
+</div>
+<!-- 5 Sparse Data Fields -->
+<div class="flex flex-col gap-3.5 pt-1">
+<div>
+<div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Classification</div>
+<div class="text-xs text-white font-medium mt-0.5" id="drawerClass">Exposed Pipeline</div>
+</div>
+<div>
+<div class="flex items-center justify-between text-[10px]">
+<span class="text-[#6b7280] uppercase tracking-wider">Confidence</span>
+<span class="font-mono-clean text-[#f59e0b] font-medium" id="drawerConfText">94%</span>
+</div>
+<div class="w-full h-1 bg-[#1a222f] rounded-full mt-1 overflow-hidden">
+<div class="h-full bg-[#f59e0b] rounded-full" id="drawerConfBar" style="width: 94%;"></div>
+</div>
+</div>
+<div>
+<div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Coordinates</div>
+<div class="text-xs font-mono-clean text-[#d1d5db] mt-0.5" id="drawerCoords">44° 18.294' N, 063° 32.118' W</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Length</div>
+<div class="text-xs font-mono-clean text-white mt-0.5" id="drawerLength">14.8 m</div>
+</div>
+<div>
+<div class="text-[10px] text-[#6b7280] uppercase tracking-wider">Depth</div>
+<div class="text-xs font-mono-clean text-white mt-0.5" id="drawerDepth">138 m</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Drawer Action Button -->
+<div class="p-4 border-t border-[#1e2634]">
+<button class="w-full py-1.5 px-3 border border-[#38bdf8] text-[#38bdf8] hover:bg-[#38bdf8]/10 text-xs font-medium rounded transition-colors text-center" type="button">
+          Export Detection
+        </button>
+</div>
+</aside>
+</div>
+<script>
+    const anomalies = {
+      pipeline: {
+        classification: 'Exposed Pipeline',
+        confidence: '94%',
+        confVal: 94,
+        color: '#f59e0b',
+        coords: "44° 18.294' N, 063° 32.118' W",
+        length: '14.8 m',
+        depth: '138 m'
+      },
+      net: {
+        classification: 'Discarded Ghost Net',
+        confidence: '88%',
+        confVal: 88,
+        color: '#ef4444',
+        coords: "44° 18.312' N, 063° 32.145' W",
+        length: '8.4 m',
+        depth: '139 m'
+      },
+      ridge: {
+        classification: 'Natural Bedrock Ridge',
+        confidence: '76%',
+        confVal: 76,
+        color: '#10b981',
+        coords: "44° 18.260' N, 063° 32.190' W",
+        length: '6.1 m',
+        depth: '141 m'
+      },
+      boulder: {
+        classification: 'Glacial Boulder',
+        confidence: '82%',
+        confVal: 82,
+        color: '#10b981',
+        coords: "44° 18.275' N, 063° 32.080' W",
+        length: '2.3 m',
+        depth: '137 m'
+      }
+    };
+
+    function openDrawer(type) {
+      const drawer = document.getElementById('detailDrawer');
+      const data = anomalies[type] || anomalies.pipeline;
+
+      document.getElementById('drawerClass').textContent = data.classification;
+      document.getElementById('drawerConfText').textContent = data.confidence;
+      document.getElementById('drawerConfText').style.color = data.color;
+      
+      const bar = document.getElementById('drawerConfBar');
+      bar.style.width = data.confidence;
+      bar.style.backgroundColor = data.color;
+
+      document.getElementById('drawerCoords').textContent = data.coords;
+      document.getElementById('drawerLength').textContent = data.length;
+      document.getElementById('drawerDepth').textContent = data.depth;
+
+      drawer.classList.remove('hidden');
+    }
+
+    function closeDrawer() {
+      const drawer = document.getElementById('detailDrawer');
+      drawer.classList.add('hidden');
+    }
+  </script>
+</body></html>
