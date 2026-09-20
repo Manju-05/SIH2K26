@@ -21,24 +21,34 @@ class ReportGenerator:
         """
         features = []
         now_utc = datetime.now(timezone.utc).isoformat()
+        survey_title = detections_data.get("survey_name", survey_name)
+
         for det in detections_data.get("detections", []):
-            coords = det["coordinates"]
+            coords = det.get("coordinates", {})
+            dims = det.get("dimensions", {})
+            physics = det.get("acoustic_physics", {})
+            
+            lat = coords.get("latitude", 0.0)
+            lon = coords.get("longitude", 0.0)
+            conf_val = det.get("confidence", 0.0)
+            conf_pct = det.get("confidence_percent", f"{int(conf_val * 100)}%")
+
             feature = {
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [coords["longitude"], coords["latitude"]]
+                    "coordinates": [lon, lat]
                 },
                 "properties": {
-                    "target_id": det["id"],
-                    "classification": det["class_name"],
-                    "confidence_score": det["confidence"],
-                    "confidence_percent": det["confidence_percent"],
-                    "length_m": det["dimensions"]["length_m"],
-                    "width_m": det["dimensions"]["width_m"],
-                    "height_m": det["dimensions"]["estimated_height_m"],
-                    "area_m2": det["dimensions"]["estimated_area_m2"],
-                    "has_shadow": det["acoustic_physics"]["has_shadow"],
+                    "target_id": det.get("id", len(features) + 1),
+                    "classification": det.get("class_name", "debris_anomaly"),
+                    "confidence_score": conf_val,
+                    "confidence_percent": conf_pct,
+                    "length_m": dims.get("length_m", dims.get("estimated_length_m", 0.0)),
+                    "width_m": dims.get("width_m", dims.get("estimated_width_m", 0.0)),
+                    "height_m": dims.get("estimated_height_m", 0.0),
+                    "area_m2": dims.get("estimated_area_m2", 0.0),
+                    "has_shadow": physics.get("has_shadow", False),
                     "detected_at": now_utc
                 }
             }
@@ -47,7 +57,7 @@ class ReportGenerator:
         return {
             "type": "FeatureCollection",
             "metadata": {
-                "survey_name": survey_name,
+                "survey_name": survey_title,
                 "total_targets_detected": len(features),
                 "generated_at": now_utc,
                 "sensor_type": "Side-Scan Sonar (SSS)",
@@ -71,23 +81,27 @@ class ReportGenerator:
             "Length (m)", "Width (m)", "Est Height (m)", "Area (m2)", "Acoustic Shadow Verified"
         ])
 
-        for det in detections_data.get("detections", []):
-            coords = det["coordinates"]
-            dims = det["dimensions"]
-            physics = det["acoustic_physics"]
+        for idx, det in enumerate(detections_data.get("detections", []), 1):
+            coords = det.get("coordinates", {})
+            dims = det.get("dimensions", {})
+            physics = det.get("acoustic_physics", {})
+            
+            conf_val = det.get("confidence", 0.0)
+            conf_pct = det.get("confidence_percent", f"{int(conf_val * 100)}%")
+
             writer.writerow([
-                det["id"],
-                det["class_name"],
-                det["confidence_percent"],
-                coords["latitude"],
-                coords["longitude"],
-                coords["cross_track_offset_m"],
-                coords["along_track_offset_m"],
-                dims["length_m"],
-                dims["width_m"],
-                dims["estimated_height_m"],
-                dims["estimated_area_m2"],
-                "YES" if physics["has_shadow"] else "NO"
+                det.get("id", idx),
+                det.get("class_name", "debris_anomaly"),
+                conf_pct,
+                coords.get("latitude", 0.0),
+                coords.get("longitude", 0.0),
+                coords.get("cross_track_offset_m", 0.0),
+                coords.get("along_track_offset_m", 0.0),
+                dims.get("length_m", dims.get("estimated_length_m", 0.0)),
+                dims.get("width_m", dims.get("estimated_width_m", 0.0)),
+                dims.get("estimated_height_m", 0.0),
+                dims.get("estimated_area_m2", 0.0),
+                "YES" if physics.get("has_shadow", False) else "NO"
             ])
 
         return output.getvalue()

@@ -55,6 +55,7 @@ def get_system_status():
 
 
 @app.post("/api/process-sonar-image")
+@app.post("/api/detect")
 async def process_sonar_image(
     file: UploadFile = File(...),
     vessel_lat: float = Form(12.9234),
@@ -68,48 +69,55 @@ async def process_sonar_image(
     Processes an uploaded sonar image: despeckles, runs AI object detection,
     validates highlight-shadow acoustic physics, and outputs georeferenced anomaly coordinates.
     """
-    contents = await file.read()
-    nparr = np.frombuffer(contents, np.uint8)
-    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    try:
+        contents = await file.read()
+        if not contents or len(contents) == 0:
+            return JSONResponse(status_code=400, content={"error": "Empty file uploaded.", "detail": "Invalid image payload."})
 
-    if image is None:
-        return JSONResponse(status_code=400, content={"error": "Invalid image file uploaded."})
+        nparr = np.frombuffer(contents, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    # Run detection pipeline
-    result = detector.detect_image(
-        image_input=image,
-        vessel_lat=vessel_lat,
-        vessel_lon=vessel_lon,
-        vessel_heading_deg=vessel_heading,
-        confidence_thresh=confidence_thresh,
-        apply_preprocessing=apply_filter
-    )
+        if image is None or image.size == 0:
+            return JSONResponse(status_code=400, content={"error": "Invalid image file uploaded.", "detail": "Invalid image format or decoding failed."})
 
-    # Generate processed/annotated false-color image for UI visualization
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    if apply_filter:
-        gray = standard_sonar_preprocess(gray)
-        
-    color_img = apply_sonar_colormap(gray, palette_name=colormap)
+        # Run detection pipeline
+        result = detector.detect_image(
+            image_input=image,
+            vessel_lat=vessel_lat,
+            vessel_lon=vessel_lon,
+            vessel_heading_deg=vessel_heading,
+            confidence_thresh=confidence_thresh,
+            apply_preprocessing=apply_filter
+        )
 
-    # Draw bounding boxes and labels
-    for det in result["detections"]:
-        x1, y1, x2, y2 = det["bbox"]
-        class_name = det["class_name"]
-        conf_str = det["confidence_percent"]
-        color = (0, 230, 255) if colormap == "copper" else (0, 255, 120)
-        
-        cv2.rectangle(color_img, (x1, y1), (x2, y2), color, 2)
-        label = f"{class_name} [{conf_str}]"
-        cv2.putText(color_img, label, (x1, max(18, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
+        # Generate processed/annotated false-color image for UI visualization
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if apply_filter:
+            gray = standard_sonar_preprocess(gray)
+            
+        color_img = apply_sonar_colormap(gray, palette_name=colormap)
 
-    # Encode annotated image to base64
-    _, buffer = cv2.imencode('.jpg', color_img)
-    encoded_img = base64.b64encode(buffer).decode('utf-8')
+        # Draw bounding boxes and labels
+        for det in result["detections"]:
+            x1, y1, x2, y2 = det["bbox"]
+            class_name = det["class_name"]
+            conf_str = det["confidence_percent"]
+            color = (0, 230, 255) if colormap == "copper" else (0, 255, 120)
+            
+            cv2.rectangle(color_img, (x1, y1), (x2, y2), color, 2)
+            label = f"{class_name} [{conf_str}]"
+            cv2.putText(color_img, label, (x1, max(18, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
 
-    result["annotated_image_base64"] = f"data:image/jpeg;base64,{encoded_img}"
-    result["filename"] = file.filename
-    return result
+        # Encode annotated image to base64
+        _, buffer = cv2.imencode('.jpg', color_img)
+        encoded_img = base64.b64encode(buffer).decode('utf-8')
+
+        result["success"] = True
+        result["annotated_image_base64"] = f"data:image/jpeg;base64,{encoded_img}"
+        result["filename"] = file.filename or "sonar_scan.jpg"
+        return result
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": "Inference error", "detail": str(e)})
 
 
 @app.get("/api/fetch-sample-sonar")

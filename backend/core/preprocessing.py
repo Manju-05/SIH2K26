@@ -87,13 +87,27 @@ def remove_water_column(waterfall_slice: np.ndarray, threshold_ratio: float = 0.
     return smoothed
 
 
-def slant_range_correction(raw_swath: np.ndarray, altitude_px: int) -> np.ndarray:
+def slant_range_correction(
+    raw_swath: np.ndarray,
+    altitude_px: int = 20,
+    altitude_m: float = None,
+    max_range_m: float = None
+) -> np.ndarray:
     """
     Converts Slant-Range (R_slant) to Ground-Range (R_ground):
     R_ground = sqrt(R_slant^2 - Altitude^2)
+    Accepts either altitude_px directly or (altitude_m, max_range_m) to calculate altitude in pixels.
     """
+    if raw_swath.size == 0:
+        return raw_swath
+
     h, w = raw_swath.shape[:2]
     mid = w // 2
+
+    if altitude_m is not None and max_range_m is not None and max_range_m > 0:
+        altitude_px = int((altitude_m / max_range_m) * mid)
+
+    altitude_px = max(0, min(altitude_px, mid - 1))
     corrected = np.zeros_like(raw_swath)
     
     # Map each ground-range pixel to corresponding slant-range pixel

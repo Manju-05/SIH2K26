@@ -39,7 +39,14 @@ class AcousticShadowValidator:
         box_w = x2 - x1
         box_h = y2 - y1
         if box_w <= 0 or box_h <= 0:
-            return {"is_valid": False, "score": 0.0, "has_shadow": False, "has_highlight": False}
+            return {
+                "is_valid": False,
+                "physics_confidence": 0.0,
+                "has_highlight": False,
+                "has_shadow": False,
+                "shadow_length_px": 0,
+                "estimated_height_m": 0.0
+            }
 
         obj_crop = image_gray[y1:y2, x1:x2]
         
