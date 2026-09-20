@@ -45,29 +45,88 @@ class SonarDetector:
 
     def _load_model(self):
         """Attempts to load PyTorch YOLO or ONNX model if weights exist."""
-        if not self.weights_path or not os.path.exists(self.weights_path):
-            # Check default locations
-            default_pt = "models/weights/best.pt"
-            default_onnx = "models/weights/best.onnx"
-            if os.path.exists(default_pt):
-                self.weights_path = default_pt
-            elif os.path.exists(default_onnx):
-                self.weights_path = default_onnx
-            else:
-                print("[INFO] No trained weights found in models/weights/. Running in acoustic heuristic/vision mode.")
-                return
+        default_pt = "models/weights/best.pt"
+        default_onnx = "models/weights/best.onnx"
+
+        if os.path.exists(default_onnx) and os.path.isfile(default_onnx):
+            self.weights_path = default_onnx
+        elif os.path.exists(default_pt) and os.path.isfile(default_pt):
+            self.weights_path = default_pt
+        elif self.weights_path and os.path.exists(self.weights_path):
+            pass
+        else:
+            print("[INFO] No trained weights found in models/weights/. Running in acoustic heuristic/vision mode.")
+            return
 
         try:
             if self.weights_path.endswith(".onnx"):
                 import onnxruntime as ort
                 self.onnx_session = ort.InferenceSession(self.weights_path, providers=['CPUExecutionProvider'])
+                self.input_name = self.onnx_session.get_inputs()[0].name
                 print(f"[OK] Loaded ONNX model from: {self.weights_path}")
-            elif self.weights_path.endswith(".pt"):
+            elif self.weights_path.endswith(".pt") and os.path.isfile(self.weights_path):
                 from ultralytics import YOLO
                 self.model = YOLO(self.weights_path)
                 print(f"[OK] Loaded PyTorch YOLO model from: {self.weights_path}")
         except Exception as e:
             print(f"[WARN] Warning loading model weights ({e}). Defaulting to acoustic heuristic detector.")
+
+    def _run_onnx_inference(self, img_gray: np.ndarray, conf_thresh: float) -> List[Dict[str, Any]]:
+        """Runs fast ONNX runtime inference for YOLOv8."""
+        h, w = img_gray.shape[:2]
+        # Preprocess: Resize to 640x640, normalize 0-1, CHW format
+        resized = cv2.resize(img_gray, (640, 640))
+        rgb = cv2.cvtColor(resized, cv2.COLOR_GRAY2RGB)
+        input_data = rgb.astype(np.float32) / 255.0
+        input_data = np.transpose(input_data, (2, 0, 1))  # HWC -> CHW
+        input_tensor = np.expand_dims(input_data, axis=0)  # BCHW
+
+        outputs = self.onnx_session.run(None, {self.input_name: input_tensor})[0]
+        # Output shape is (1, 4 + num_classes, num_anchors) e.g. (1, 9, 8400)
+        predictions = np.squeeze(outputs).T  # (8400, 9)
+
+        boxes = []
+        confidences = []
+        class_ids = []
+
+        scale_x = w / 640.0
+        scale_y = h / 640.0
+
+        for row in predictions:
+            # First 4 are x_center, y_center, width, height
+            cx, cy, bw, bh = row[0:4]
+            # Next are class probabilities
+            class_scores = row[4:]
+            cls_id = int(np.argmax(class_scores))
+            conf = float(class_scores[cls_id])
+
+            if conf >= conf_thresh:
+                # Convert center-wh to xyxy
+                x1 = int((cx - bw / 2.0) * scale_x)
+                y1 = int((cy - bh / 2.0) * scale_y)
+                x2 = int((cx + bw / 2.0) * scale_x)
+                y2 = int((cy + bh / 2.0) * scale_y)
+                
+                boxes.append([x1, y1, x2 - x1, y2 - y1])
+                confidences.append(conf)
+                class_ids.append(cls_id)
+
+        detections = []
+        if len(boxes) > 0:
+            indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_thresh, 0.45)
+            if len(indices) > 0:
+                for idx in indices.flatten():
+                    bx, by, bw, bh = boxes[idx]
+                    cls_id = class_ids[idx]
+                    cls_name = CLASS_NAMES.get(cls_id, f"debris_class_{cls_id}")
+                    detections.append({
+                        "bbox": [bx, by, bx + bw, by + bh],
+                        "confidence": float(confidences[idx]),
+                        "class_id": cls_id,
+                        "class_name": cls_name
+                    })
+
+        return detections
 
     def detect_image(
         self,
@@ -95,8 +154,10 @@ class SonarDetector:
 
         raw_detections = []
 
-        # 2. Run Deep Learning Model (if available)
-        if self.model is not None:
+        # 2. Run Deep Learning Model (ONNX or PyTorch YOLO)
+        if self.onnx_session is not None:
+            raw_detections = self._run_onnx_inference(processed_gray, confidence_thresh)
+        elif self.model is not None:
             # YOLO PyTorch Inference
             rgb_input = cv2.cvtColor(processed_gray, cv2.COLOR_GRAY2RGB)
             results = self.model.predict(rgb_input, conf=confidence_thresh, imgsz=640, verbose=False)[0]
