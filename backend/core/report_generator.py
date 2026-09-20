@@ -61,7 +61,7 @@ class ReportGenerator:
                 "total_targets_detected": len(features),
                 "generated_at": now_utc,
                 "sensor_type": "Side-Scan Sonar (SSS)",
-                "system": "AI-Powered Marine Debris Detector (SIH26057)"
+                "system": "FlowNex AI-Powered Marine Debris Detector (SIH26057)"
             },
             "features": features
         }

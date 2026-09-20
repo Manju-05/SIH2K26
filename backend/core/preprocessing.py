@@ -57,7 +57,7 @@ def apply_clahe(img: np.ndarray, clip_limit: float = 3.0, tile_grid_size: tuple 
 
 def standard_sonar_preprocess(img: np.ndarray) -> np.ndarray:
     """
-    Standard DRISHTI preprocessing pipeline:
+    Standard FlowNex Sonar Preprocessing Pipeline:
     7x7 Lee Filter -> CLAHE (3.0, 8x8)
     """
     despeckled = lee_speckle_filter(img, kernel_size=7)

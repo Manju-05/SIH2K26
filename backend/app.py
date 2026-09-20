@@ -19,7 +19,7 @@ from backend.core.report_generator import ReportGenerator
 from backend.core.parser_xtf import SonarLogParser
 
 app = FastAPI(
-    title="AI-Powered Underwater Marine Debris & Anomaly Detection System",
+    title="FlowNex: AI-Powered Underwater Marine Debris & Sonar Anomaly Detection System",
     description="Automated Side-Scan Sonar Computer Vision Pipeline (SIH26057 - MoES/NIOT)",
     version="1.0.0"
 )
@@ -44,7 +44,7 @@ def get_system_status():
     engine_type = "PyTorch YOLOv8s" if detector.model else ("ONNX Runtime" if detector.onnx_session else "Acoustic Heuristic CV")
     return {
         "status": "ONLINE",
-        "system": "DRISHTI-SSS Sonar Vision Engine",
+        "system": "FlowNex Sonar Vision Engine",
         "problem_statement": "SIH26057 (MoES / NIOT)",
         "model_loaded": has_weights,
         "engine": engine_type,

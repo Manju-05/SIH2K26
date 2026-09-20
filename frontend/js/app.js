@@ -1,5 +1,6 @@
 /**
- * Flow Nex Sonar Dashboard Controller (DRISHTI-SSS)
+ * FlowNex Sonar AI Dashboard Controller
+ * Ministry of Earth Sciences (MoES) / NIOT - SIH26057
  */
 
 let waterfallViewer = null;

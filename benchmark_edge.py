@@ -21,9 +21,9 @@ from backend.core.georeferencer import SonarGeoreferencer
 
 
 def run_edge_benchmark(num_iterations: int = 50):
-    print("=" * 65)
-    print(" [BENCHMARK] DRISHTI-SSS Embedded Edge Performance Benchmark")
-    print(" Marine Debris & Sonar Anomaly Detection (SIH26057)")
+    print("=" * 60)
+    print(" [BENCHMARK] FlowNex Embedded Edge Performance Benchmark")
+    print("=" * 60)
     print(" Target Hardware Profile: NVIDIA Jetson Orin / Embedded AUV Payload")
     print("=" * 65)
 

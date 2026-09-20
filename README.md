@@ -1,4 +1,4 @@
-# 🌊 DRISHTI-SSS: AI-Powered Underwater Marine Debris & Sonar Anomaly Detection System
+# 🌊 FlowNex: AI-Powered Underwater Marine Debris & Sonar Anomaly Detection System
 
 <div align="center">
 
@@ -32,8 +32,8 @@ Side-Scan Sonar (SSS) is the primary acoustic tool for mapping the seabed and id
 3. **Manual Analysis Latency:** Hydrographers spend days post-survey reviewing thousands of pings, preventing real-time mission abort/recovery decisions during AUV operations.
 4. **Physics Disconnect:** Generic computer vision models misclassify geological mounds as debris because they ignore acoustic highlight-shadow physics and grazing angles.
 
-### The DRISHTI-SSS Solution
-**DRISHTI-SSS** is an automated hydrographic computer vision suite designed to operate both on embedded edge hardware (NVIDIA Jetson Orin Nano on AUVs) and in shore/vessel workstations. It cleans acoustic returns with a **7×7 Local MMSE Lee Speckle Filter**, enhances contrast with **CLAHE**, detects marine debris using **YOLOv8 / ONNX Runtime (~82% mAP50)**, validates **acoustic highlight-shadow physical consistency**, computes **WGS84 geodetic coordinates**, and serves an interactive **Stitch-inspired SeaScan AI Hydrographic Dashboard**.
+### The FlowNex Solution
+**FlowNex** is an automated hydrographic computer vision suite designed to operate both on embedded edge hardware (NVIDIA Jetson Orin Nano on AUVs) and in shore/vessel workstations. It cleans acoustic returns with a **7×7 Local MMSE Lee Speckle Filter**, enhances contrast with **CLAHE**, detects marine debris using **YOLOv8 / ONNX Runtime (~82% mAP50)**, validates **acoustic highlight-shadow physical consistency**, computes **WGS84 geodetic coordinates**, and serves an interactive **FlowNex Sonar AI Hydrographic Dashboard**.
 
 ---
 
@@ -43,7 +43,7 @@ Side-Scan Sonar (SSS) is the primary acoustic tool for mapping the seabed and id
 - **🔬 7×7 Lee Filter & CLAHE Signal Processing:** Removes acoustic speckle while preserving sharp structural edges, followed by Contrast-Limited Adaptive Histogram Equalization.
 - **📐 Acoustic Highlight-Shadow Physical Validator:** Enforces acoustic wave physics by confirming that a bright acoustic reflection has a trailing dark shadow aligned away from the nadir line. Calculates estimated target height ($H_{obj} = \frac{L_{shadow} \cdot H_{altitude}}{R_{slant} + L_{shadow}}$).
 - **🌐 WGS84 Georeferencing Engine:** Converts pixel coordinates on the sonar swath into real-world Latitude/Longitude coordinates based on vessel GPS trackline, heading, and along/cross-track offsets.
-- **🧭 SeaScan AI Hydrographic Dashboard:** Modern oceanic dark UI featuring real-time Sonar Waterfall canvas rendering, dynamic false-color palette switching (Copper, Amber, Emerald, Grayscale), CARTO Voyager basemap integration, and target inspection drawer.
+- **🧭 FlowNex Sonar AI Dashboard:** Modern oceanic dark UI featuring real-time Sonar Waterfall canvas rendering, dynamic false-color palette switching (Copper, Amber, Emerald, Grayscale), CARTO Voyager basemap integration, and target inspection drawer.
 - **📊 Standardized GIS & Mission Exporters:** One-click generation of RFC 7946 GeoJSON (compatible with QGIS, ArcGIS, and Leaflet) and clean CSV target lists for recovery teams.
 - **🧪 Comprehensive Edge-Case Test Suite:** 100% test coverage across polar coordinate boundaries, corrupted payloads, out-of-bounds bounding boxes, and extreme confidence levels.
 
@@ -58,7 +58,7 @@ flowchart TD
     B1 --> B2["CLAHE Contrast Enhancement (3.0 Clip)"]
     B2 --> B3["Slant-Range Correction (SRC)"]
     
-    B3 --> C["AI Detection Engine (ONNX Runtime / PyTorch)"]
+    B3 --> C["FlowNex AI Detection Engine (ONNX Runtime / PyTorch)"]
     C --> D{"Candidate Anomaly Detection"}
     
     D --> E["Acoustic Physics Validator"]
@@ -68,7 +68,7 @@ flowchart TD
     E2 --> F["WGS84 Georeferencing Engine"]
     F --> F1["Pixel-to-Geodetic Coordinate Mapping"]
     
-    F1 --> G["SeaScan AI Hydrographic Dashboard"]
+    F1 --> G["FlowNex Sonar Dashboard"]
     G --> H["Sonar Waterfall Viewer (Multi-Colormap)"]
     G --> I["CARTO Voyager GIS Bathymetry Map"]
     G --> J["Target Inspection & Morphology Drawer"]
@@ -151,7 +151,7 @@ Open your web browser and navigate to:
 
 ---
 
-## 🖥️ Using the SeaScan AI Dashboard
+## 🖥️ Using the FlowNex Dashboard
 
 Once the dashboard loads in your browser, you can explore four dedicated workspaces:
 
@@ -207,7 +207,7 @@ The FastAPI backend exposes standard REST endpoints:
 
 | Endpoint | Method | Description |
 |---|:---:|---|
-| `/` | `GET` | Serves the interactive SeaScan AI Dashboard. |
+| `/` | `GET` | Serves the interactive FlowNex Dashboard. |
 | `/api/status` | `GET` | Returns AI model status, engine type, active classes, and pipeline settings. |
 | `/api/detect` | `POST` | Upload an image file (`multipart/form-data`) with nav parameters to get detections. |
 | `/api/process-sonar-image` | `POST` | Processes sonar images with colormap selection and Lee filtering. |
@@ -240,7 +240,7 @@ python -m unittest tests/test_end_to_end_edge_cases.py
 [TEST] 5. Report Generators Edge Cases...
   --> Report exporters correctly sanitized and formatted edge-case payloads.
 [TEST] 6. API /api/status Check...
-  --> Status OK: DRISHTI-SSS Sonar Vision Engine (Model Loaded: True)
+  --> Status OK: FlowNex Sonar Vision Engine (Model Loaded: True)
 [TEST] 7. API /api/detect Multipart Upload...
   --> Detection API successful! Processed detections: 1
 [TEST] 8. API /api/detect Error Handling & Corrupt Inputs...
@@ -289,7 +289,7 @@ SIH2K26/
 │       ├── parser_xtf.py               # Continuous survey transect slicer & ping parser
 │       └── report_generator.py         # GeoJSON (RFC 7946) and CSV export generators
 ├── frontend/
-│   ├── index.html                      # SeaScan AI hydrographic dashboard
+│   ├── index.html                      # FlowNex hydrographic dashboard
 │   ├── css/
 │   │   └── style.css                   # Tailwind & custom oceanic dark styling
 │   └── js/
@@ -317,6 +317,6 @@ SIH2K26/
 ## 📜 License & Acknowledgements
 
 - **Developed for:** Smart India Hackathon 2026 (Ministry of Earth Sciences / National Institute of Ocean Technology).
-- **Dataset Courtesy:** [`rehan9599/drishti-sss`](https://huggingface.co/datasets/rehan9599/drishti-sss) on Hugging Face.
+- **Dataset Reference:** [`rehan9599/drishti-sss`](https://huggingface.co/datasets/rehan9599/drishti-sss) on Hugging Face.
 - **Basemap Tiles:** CARTO Voyager / OpenStreetMap contributors.
 - **License:** MIT License. See [LICENSE](LICENSE) for details.

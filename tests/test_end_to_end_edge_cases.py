@@ -182,6 +182,7 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(data["status"], "ONLINE")
         self.assertTrue(data["model_loaded"])
         self.assertEqual(data["engine"], "ONNX Runtime")
+        self.assertIn("FlowNex", data["system"])
         print(f"  --> Status OK: {data['system']} (Model Loaded: {data['model_loaded']})")
 
     def test_07_api_detect_multipart_valid(self):
@@ -283,7 +284,7 @@ class TestAPIEndpoints(unittest.TestCase):
         print("\n[TEST] 10. Frontend Static Assets Serving...")
         resp_ui = requests.get(f"{BASE_URL}/", timeout=5)
         self.assertEqual(resp_ui.status_code, 200)
-        self.assertIn("SeaScan AI", resp_ui.text)
+        self.assertIn("FlowNex", resp_ui.text)
         print("  --> Frontend UI is mounted and served at root URL /.")
 
 

@@ -16,10 +16,10 @@ from huggingface_hub import snapshot_download
 from ultralytics import YOLO
 
 def main():
-    print("==================================================")
-    print(" 🌊 DRISHTI SSS Sonar Debris Detector Training")
+    print("=" * 60)
+    print(" 🌊 FlowNex: Sonar AI Debris Detector Cloud Training")
     print(" Smart India Hackathon 2026 - Problem Statement 26057")
-    print("==================================================")
+    print("=" * 60)
 
     # 1. Download drishti-sss dataset from HuggingFace to temporary cloud storage
     dataset_dir = "/content/drishti_dataset"
