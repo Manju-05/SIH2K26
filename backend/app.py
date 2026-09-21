@@ -58,8 +58,8 @@ def get_system_status():
 @app.post("/api/detect")
 async def process_sonar_image(
     file: UploadFile = File(...),
-    vessel_lat: float = Form(12.9234),
-    vessel_lon: float = Form(80.2451),
+    vessel_lat: float = Form(13.0827),
+    vessel_lon: float = Form(80.3850),
     vessel_heading: float = Form(45.0),
     confidence_thresh: float = Form(0.35),
     colormap: str = Form("copper"),
@@ -123,10 +123,25 @@ async def process_sonar_image(
 @app.get("/api/fetch-sample-sonar")
 def fetch_sample_sonar(sample_type: str = Query("shipwreck")):
     """
-    Generates or fetches a live high-resolution realistic Side-Scan Sonar simulation slice
-    with acoustic highlights, shadows, and geological seafloor ripples on the fly.
+    Serves verified benchmark sonar test images or generates realistic simulation slice on the fly.
     """
-    # Create a realistic 640x640 SSS acoustic swath simulation tile
+    # 1. First check if standardized benchmark image exists in samples/images/
+    sample_mapping = {
+        "shipwreck": "sample_01_shipwreck.jpg",
+        "ghost_net": "sample_02_ghost_net.jpg",
+        "submarine_pipeline": "sample_03_submarine_pipeline.jpg",
+        "mine_cylinder": "sample_04_mine_cylinder.jpg",
+        "clean_seabed": "sample_05_clean_seabed.jpg"
+    }
+    sample_filename = sample_mapping.get(sample_type)
+    if sample_filename:
+        samples_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "samples", "images")
+        sample_path = os.path.join(samples_dir, sample_filename)
+        if os.path.exists(sample_path):
+            with open(sample_path, "rb") as f:
+                return Response(content=f.read(), media_type="image/jpeg")
+
+    # 2. Fallback: generate realistic 640x640 SSS acoustic swath simulation tile
     h, w = 640, 640
     # Background seabed reverberation & sand ripples
     y_coords, x_coords = np.mgrid[0:h, 0:w]
@@ -149,12 +164,17 @@ def fetch_sample_sonar(sample_type: str = Query("shipwreck")):
         cv2.ellipse(seabed, (220, 300), (45, 30), 30, 0, 360, 220, -1)
         cv2.ellipse(seabed, (150, 300), (35, 25), 30, 0, 360, 15, -1)
     elif sample_type == "submarine_pipeline":
-        # Linear cylinder along track
-        cv2.line(seabed, (380, 100), (410, 540), 245, 8)
-        cv2.line(seabed, (415, 100), (455, 540), 15, 12)
-    else:  # mine_cylinder
+        # Linear cylindrical pipe along track
+        cv2.line(seabed, (375, 50), (415, 590), 245, 14)
+        cv2.line(seabed, (415, 50), (465, 590), 12, 18)
+    elif sample_type == "mine_cylinder":
         cv2.circle(seabed, (260, 220), 18, 240, -1)
         cv2.ellipse(seabed, (215, 220), (30, 15), 0, 0, 360, 10, -1)
+    elif sample_type == "clean_seabed":
+        pass  # Natural seafloor control sample
+    else:  # default to shipwreck
+        cv2.rectangle(seabed, (360, 260), (440, 340), 235, -1)
+        cv2.rectangle(seabed, (440, 260), (530, 340), 12, -1)
 
     _, buffer = cv2.imencode('.jpg', seabed)
     return Response(content=buffer.tobytes(), media_type="image/jpeg")

@@ -32,8 +32,8 @@ class SonarLogParser:
             ping_data = {
                 "ping_id": int(row.get("ping_id", len(pings) + 1)),
                 "timestamp": row.get("timestamp", ""),
-                "latitude": float(row.get("latitude", 12.9234)),
-                "longitude": float(row.get("longitude", 80.2451)),
+                "latitude": float(row.get("latitude", 13.0827)),
+                "longitude": float(row.get("longitude", 80.3850)),
                 "heading": float(row.get("heading", 45.0)),
                 "altitude_m": float(row.get("altitude_m", 10.0)),
                 "speed_knots": float(row.get("speed_knots", 3.5))
@@ -63,7 +63,7 @@ class SonarLogParser:
             # Associate metadata from the midpoint ping
             ping_idx = min(len(pings_metadata) - 1, max(0, y + (self.tile_size // 2)))
             ping_info = pings_metadata[ping_idx] if pings_metadata else {
-                "latitude": 12.9234, "longitude": 80.2451, "heading": 45.0, "altitude_m": 10.0
+                "latitude": 13.0827, "longitude": 80.3850, "heading": 45.0, "altitude_m": 10.0
             }
 
             tiles.append({
@@ -78,8 +78,8 @@ class SonarLogParser:
 
     @staticmethod
     def generate_synthetic_survey_mission(
-        start_lat: float = 12.9234,
-        start_lon: float = 80.2451,
+        start_lat: float = 13.0827,
+        start_lon: float = 80.3850,
         heading: float = 45.0,
         num_pings: int = 1200
     ) -> Tuple[str, np.ndarray]:

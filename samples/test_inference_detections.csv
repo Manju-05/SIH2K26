@@ -1,0 +1,6 @@
+Sample Image,Detections Count,Target ID,Class Name,Calibrated Confidence,BBox (x1 y1 x2 y2),Latitude,Longitude,Cross-Track Offset (m),Along-Track Offset (m),Length (m),Width (m),Est Height (m),Shadow Verified
+sample_01_shipwreck.jpg,1,1,shipwreck,94%,"[357, 249, 450, 342]",13.082686,80.38504,4.15,2.0,7.44,4.65,1.88,YES
+sample_02_ghost_net.jpg,1,1,ghost_net,96%,"[183, 253, 290, 336]",13.08274,80.384986,-4.2,2.08,6.64,5.35,2.11,YES
+sample_03_submarine_pipeline.jpg,1,1,submarine_pipeline,91%,"[367, 43, 424, 600]",13.082676,80.385024,3.75,-0.08,44.56,2.85,1.24,YES
+sample_04_mine_cylinder.jpg,1,1,mine_cylinder,96%,"[233, 199, 278, 250]",13.082769,80.385029,-3.25,7.68,4.08,2.25,1.0,YES
+sample_05_clean_seabed.jpg,0,N/A,clean_background,0%,[],13.0827,80.385,0.0,0.0,0.0,0.0,0.0,NO

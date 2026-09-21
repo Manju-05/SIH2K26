@@ -1,0 +1,5 @@
+Target ID,Classification,Confidence,Latitude,Longitude,Geo Location (Degrees),Cross-Track Offset (m),Along-Track Offset (m),Length (m),Width (m),Est Height (m),Area (m2),Acoustic Shadow Verified
+1,shipwreck,94%,13.082686,80.385040,"13.082686° N, 80.385040° E",4.15,2.0,7.44,4.65,1.88,34.6,YES
+2,ghost_net,96%,13.082740,80.384986,"13.082740° N, 80.384986° E",-4.2,2.08,6.64,5.35,2.11,35.52,YES
+3,submarine_pipeline,91%,13.082676,80.385024,"13.082676° N, 80.385024° E",3.75,-0.08,44.56,2.85,1.24,126.99,YES
+4,mine_cylinder,96%,13.082769,80.385029,"13.082769° N, 80.385029° E",-3.25,7.68,4.08,2.25,1.0,9.18,YES

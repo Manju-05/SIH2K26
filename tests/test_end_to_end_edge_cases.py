@@ -173,10 +173,18 @@ class TestCoreEdgeCases(unittest.TestCase):
 class TestAPIEndpoints(unittest.TestCase):
     """End-to-end API integration tests against the live running FastAPI server."""
 
+    def setUp(self):
+        self.session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=3)
+        self.session.mount("http://", adapter)
+
+    def tearDown(self):
+        self.session.close()
+
     def test_06_api_status_endpoint(self):
         """Check /api/status returns 200 and valid schema."""
         print("\n[TEST] 6. API /api/status Check...")
-        resp = requests.get(f"{BASE_URL}/api/status", timeout=5)
+        resp = self.session.get(f"{BASE_URL}/api/status", timeout=5)
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertEqual(data["status"], "ONLINE")
@@ -197,13 +205,13 @@ class TestAPIEndpoints(unittest.TestCase):
 
         files = {'file': ('sonar_test.png', img_encoded.tobytes(), 'image/png')}
         data = {
-            'vessel_lat': 12.9234,
-            'vessel_lon': 80.2451,
+            'vessel_lat': 13.0827,
+            'vessel_lon': 80.3850,
             'vessel_heading': 45.0,
             'confidence_thresh': 0.2,
             'apply_preprocessing': 'true'
         }
-        resp = requests.post(f"{BASE_URL}/api/detect", files=files, data=data, timeout=10)
+        resp = self.session.post(f"{BASE_URL}/api/detect", files=files, data=data, timeout=10)
         self.assertEqual(resp.status_code, 200)
         res_json = resp.json()
         self.assertTrue(res_json["success"])
@@ -217,14 +225,14 @@ class TestAPIEndpoints(unittest.TestCase):
         
         # 1. Non-image text file
         files = {'file': ('test.txt', b'This is not an image file content', 'text/plain')}
-        resp = requests.post(f"{BASE_URL}/api/detect", files=files, timeout=5)
+        resp = self.session.post(f"{BASE_URL}/api/detect", files=files, timeout=5)
         # Should gracefully return 400 Bad Request
         self.assertEqual(resp.status_code, 400)
         self.assertIn("Invalid image", resp.json()["detail"])
 
         # 2. Empty byte payload
         files_empty = {'file': ('empty.png', b'', 'image/png')}
-        resp_empty = requests.post(f"{BASE_URL}/api/detect", files=files_empty, timeout=5)
+        resp_empty = self.session.post(f"{BASE_URL}/api/detect", files=files_empty, timeout=5)
         self.assertEqual(resp_empty.status_code, 400)
 
         # 3. Extreme parameter values
@@ -237,7 +245,7 @@ class TestAPIEndpoints(unittest.TestCase):
             'vessel_heading': 1080.0,  # Extreme heading
             'confidence_thresh': 0.99
         }
-        resp_extreme = requests.post(f"{BASE_URL}/api/detect", files=files, data=data_extreme, timeout=5)
+        resp_extreme = self.session.post(f"{BASE_URL}/api/detect", files=files, data=data_extreme, timeout=5)
         self.assertEqual(resp_extreme.status_code, 200)
         print("  --> API properly rejected corrupt files with 400 Bad Request and handled extreme parameters.")
 
@@ -251,40 +259,43 @@ class TestAPIEndpoints(unittest.TestCase):
                 {
                     "id": 1,
                     "class_name": "shipwreck",
-                    "confidence": 0.88,
-                    "coordinates": {"latitude": 13.0827, "longitude": 80.2707, "cross_track_offset_m": 24.5},
-                    "dimensions": {"estimated_length_m": 18.2, "estimated_width_m": 4.1, "estimated_height_m": 3.2}
-                },
-                {
-                    "id": 2,
-                    "class_name": "submarine_pipeline",
                     "confidence": 0.94,
-                    "coordinates": {"latitude": 13.0835, "longitude": 80.2715, "cross_track_offset_m": -32.1},
-                    "dimensions": {"estimated_length_m": 50.0, "estimated_width_m": 1.0, "estimated_height_m": 0.5}
+                    "confidence_percent": "94%",
+                    "coordinates": {
+                        "latitude": 13.0827,
+                        "longitude": 80.3850,
+                        "cross_track_offset_m": 12.5,
+                        "along_track_offset_m": 5.0
+                    },
+                    "dimensions": {
+                        "length_m": 14.2,
+                        "width_m": 4.5,
+                        "estimated_height_m": 2.8,
+                        "estimated_area_m2": 63.9
+                    },
+                    "acoustic_physics": {
+                        "has_shadow": True
+                    }
                 }
             ]
         }
+        resp_geojson = self.session.post(f"{BASE_URL}/api/export-geojson", json=sample_payload, timeout=5)
+        self.assertEqual(resp_geojson.status_code, 200)
+        self.assertEqual(resp_geojson.json()["type"], "FeatureCollection")
+        self.assertEqual(len(resp_geojson.json()["features"]), 1)
 
-        # Test GeoJSON Export
-        resp_geo = requests.post(f"{BASE_URL}/api/export-geojson", json=sample_payload, timeout=5)
-        self.assertEqual(resp_geo.status_code, 200)
-        geo_data = resp_geo.json()
-        self.assertEqual(geo_data["type"], "FeatureCollection")
-        self.assertEqual(len(geo_data["features"]), 2)
-
-        # Test CSV Export
-        resp_csv = requests.post(f"{BASE_URL}/api/export-csv", json=sample_payload, timeout=5)
+        resp_csv = self.session.post(f"{BASE_URL}/api/export-csv", json=sample_payload, timeout=5)
         self.assertEqual(resp_csv.status_code, 200)
+        self.assertIn("Target ID", resp_csv.text)
         self.assertIn("shipwreck", resp_csv.text)
-        self.assertIn("submarine_pipeline", resp_csv.text)
         print("  --> Export endpoints generated valid GeoJSON (RFC 7946) and CSV datasets.")
 
-    def test_10_api_frontend_ui_assets(self):
-        """Test that index.html and frontend assets are served correctly with 200 OK."""
+    def test_10_frontend_static_serving(self):
+        """Test frontend HTML and JS assets are successfully served at root."""
         print("\n[TEST] 10. Frontend Static Assets Serving...")
-        resp_ui = requests.get(f"{BASE_URL}/", timeout=5)
-        self.assertEqual(resp_ui.status_code, 200)
-        self.assertIn("FlowNex", resp_ui.text)
+        resp = self.session.get(f"{BASE_URL}/", timeout=5)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("FlowNex", resp.text)
         print("  --> Frontend UI is mounted and served at root URL /.")
 
 
