@@ -1,0 +1,6 @@
+sample_id,image_filename,sample_type,hazard_present,ground_truth_class,target_strength,bbox_x1,bbox_y1,bbox_x2,bbox_y2,simulated_lat,simulated_lon,survey_heading_deg,description
+SMP-001,sample_01_shipwreck.jpg,shipwreck,YES,shipwreck,High,360,250,450,340,13.0833,80.3855,45.0,Sunken maritime vessel hull with prominent acoustic shadow
+SMP-002,sample_02_ghost_net.jpg,ghost_net,YES,ghost_net,Medium,210,270,280,330,13.0839,80.386,45.0,Abandoned discarded fishing gillnet entangled on seafloor
+SMP-003,sample_03_submarine_pipeline.jpg,submarine_pipeline,YES,submarine_pipeline,High,375,50,415,590,13.0845,80.3865,45.0,Continuous underwater metallic pipeline along survey trackline
+SMP-004,sample_04_mine_cylinder.jpg,mine_cylinder,YES,mine_cylinder,High,240,210,275,245,13.0851,80.387,45.0,Unexploded ordnance (UXO) / cylindrical metallic canister
+SMP-005,sample_05_clean_seabed.jpg,clean_seabed,NO,none,None,0,0,0,0,13.0857,80.3875,45.0,Control sample: natural seafloor with sand ripples and no anomalies

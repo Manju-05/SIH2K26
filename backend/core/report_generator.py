@@ -15,7 +15,14 @@ from typing import List, Dict, Any
 
 class ReportGenerator:
     @staticmethod
-    def to_geojson(detections_data: Dict[str, Any], survey_name: str = "Sonar_Survey_Mission") -> Dict[str, Any]:
+    def format_degrees(lat: float, lon: float) -> str:
+        """Formats latitude and longitude into standard geodetic degree notation."""
+        lat_dir = "N" if lat >= 0 else "S"
+        lon_dir = "E" if lon >= 0 else "W"
+        return f"{abs(lat):.6f}° {lat_dir}, {abs(lon):.6f}° {lon_dir}"
+
+    @classmethod
+    def to_geojson(cls, detections_data: Dict[str, Any], survey_name: str = "Sonar_Survey_Mission") -> Dict[str, Any]:
         """
         Converts detection results into a FeatureCollection GeoJSON.
         """
@@ -28,8 +35,8 @@ class ReportGenerator:
             dims = det.get("dimensions", {})
             physics = det.get("acoustic_physics", {})
             
-            lat = coords.get("latitude", 0.0)
-            lon = coords.get("longitude", 0.0)
+            lat = float(coords.get("latitude", 0.0))
+            lon = float(coords.get("longitude", 0.0))
             conf_val = det.get("confidence", 0.0)
             conf_pct = det.get("confidence_percent", f"{int(conf_val * 100)}%")
 
@@ -44,6 +51,9 @@ class ReportGenerator:
                     "classification": det.get("class_name", "debris_anomaly"),
                     "confidence_score": conf_val,
                     "confidence_percent": conf_pct,
+                    "latitude_deg": lat,
+                    "longitude_deg": lon,
+                    "geo_location_degrees": cls.format_degrees(lat, lon),
                     "length_m": dims.get("length_m", dims.get("estimated_length_m", 0.0)),
                     "width_m": dims.get("width_m", dims.get("estimated_width_m", 0.0)),
                     "height_m": dims.get("estimated_height_m", 0.0),
@@ -66,17 +76,18 @@ class ReportGenerator:
             "features": features
         }
 
-    @staticmethod
-    def to_csv_string(detections_data: Dict[str, Any]) -> str:
+    @classmethod
+    def to_csv_string(cls, detections_data: Dict[str, Any]) -> str:
         """
-        Converts detections into a clean CSV string for export.
+        Converts detections into a clean CSV string for export with Geo Location in Degrees.
         """
         output = io.StringIO()
         writer = csv.writer(output)
         
         # Header
         writer.writerow([
-            "Target ID", "Classification", "Confidence", "Latitude", "Longitude",
+            "Target ID", "Classification", "Confidence",
+            "Latitude", "Longitude", "Geo Location (Degrees)",
             "Cross-Track Offset (m)", "Along-Track Offset (m)",
             "Length (m)", "Width (m)", "Est Height (m)", "Area (m2)", "Acoustic Shadow Verified"
         ])
@@ -86,15 +97,19 @@ class ReportGenerator:
             dims = det.get("dimensions", {})
             physics = det.get("acoustic_physics", {})
             
+            lat = float(coords.get("latitude", 0.0))
+            lon = float(coords.get("longitude", 0.0))
             conf_val = det.get("confidence", 0.0)
             conf_pct = det.get("confidence_percent", f"{int(conf_val * 100)}%")
+            geo_degrees = coords.get("geo_location_degrees") or cls.format_degrees(lat, lon)
 
             writer.writerow([
                 det.get("id", idx),
                 det.get("class_name", "debris_anomaly"),
                 conf_pct,
-                coords.get("latitude", 0.0),
-                coords.get("longitude", 0.0),
+                f"{lat:.6f}",
+                f"{lon:.6f}",
+                geo_degrees,
                 coords.get("cross_track_offset_m", 0.0),
                 coords.get("along_track_offset_m", 0.0),
                 dims.get("length_m", dims.get("estimated_length_m", 0.0)),

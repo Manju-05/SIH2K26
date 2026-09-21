@@ -126,16 +126,14 @@ pip install -r requirements.txt
 
 ---
 
-### Step 4: Verify or Add Model Weights
-The repository comes configured with trained YOLOv8s ONNX weights in `models/weights/best.onnx`.
+### Step 4: Verify Model Weights
+The repository comes pre-configured with the active trained YOLOv8s ONNX weights in `models/weights/best.onnx` (~45 MB).
 
-If you train a new model or download new weights:
 ```
 SIH2K26/
 └── models/
     └── weights/
-        ├── best.onnx    <-- Active ONNX Runtime model (~45 MB)
-        └── best.pt      <-- PyTorch YOLO model (optional)
+        └── best.onnx    <-- Active ONNX Runtime model (~45 MB)
 ```
 
 ---
@@ -183,21 +181,14 @@ Once the dashboard loads in your browser, you can explore four dedicated workspa
 To re-train or fine-tune the model without downloading the 1.8 GB dataset locally:
 
 1. Open [Google Colab](https://colab.research.google.com).
-2. Create a new notebook or upload [`train_colab.ipynb`](file:///d:/Sigma/SIH2K26/train_colab.ipynb) / [`train_colab.py`](file:///d:/Sigma/SIH2K26/train_colab.py).
+2. Upload the provided [`train_colab.ipynb`](file:///c:/Users/dines/Desktop/SIH2K26/train_colab.ipynb) notebook.
 3. Switch runtime to GPU: **Runtime** $\rightarrow$ **Change runtime type** $\rightarrow$ **T4 GPU**.
-4. Run the training script:
-   ```python
-   # Inside Colab
-   !pip install ultralytics huggingface_hub onnx
-   from train_colab import run_training
-   run_training()
-   ```
-5. **What happens during training:**
-   - Streams 5,205 tiles from `rehan9599/drishti-sss` on Hugging Face into Colab RAM cache.
-   - Trains YOLOv8s for 30 epochs with 0-indexed class labels and acoustic data augmentations.
+4. Run all cells:
+   - Streams 5,205 tiles from `rehan9599/drishti-sss` on Hugging Face into Colab cache.
+   - Trains YOLOv8s with 0-indexed class labels and acoustic data augmentations.
    - Achieves **~87% Precision, ~80% Recall, and ~82% mAP50**.
-   - Exports `best.pt` and `best.onnx`.
-6. Download the generated `best.onnx` and place it in your local `models/weights/` directory.
+   - Exports `best.onnx`.
+5. Download the generated `best.onnx` and place it into `models/weights/`.
 
 ---
 
@@ -298,14 +289,12 @@ SIH2K26/
 │       └── map.js                      # Leaflet GIS bathymetry map & CARTO Voyager integration
 ├── models/
 │   └── weights/
-│       ├── best.onnx                   # Active trained YOLOv8s ONNX model (~45 MB)
-│       └── best.pt/                    # PyTorch weight archive (optional)
+│       └── best.onnx                   # Active trained YOLOv8s ONNX model (~45 MB)
 ├── tests/
 │   ├── __init__.py                     # Tests package
 │   └── test_end_to_end_edge_cases.py   # Comprehensive 10-point edge-case test suite
 ├── benchmark_edge.py                   # Latency and FPS benchmarking script
-├── train_colab.ipynb                   # Interactive Google Colab training notebook
-├── train_colab.py                      # Standalone cloud training script
+├── train_colab.ipynb                   # Interactive Google Colab cloud training notebook
 ├── requirements.txt                    # Project Python dependencies
 ├── .gitignore                          # Git ignore definitions
 ├── problem statement.txt               # Official SIH26057 problem statement document

@@ -25,7 +25,8 @@ class SonarGeoreferencer:
         nadir_x: int,
         vessel_lat: float,
         vessel_lon: float,
-        vessel_heading_deg: float
+        vessel_heading_deg: float,
+        nadir_y: int = 0
     ) -> Tuple[float, float, float, float]:
         """
         Computes the target Latitude & Longitude given vessel state and ping pixel coordinates.
@@ -33,7 +34,7 @@ class SonarGeoreferencer:
         """
         # Cross-track offset (negative = Port / Left, positive = Starboard / Right)
         cross_track_m = (pixel_x - nadir_x) * self.dx
-        along_track_m = pixel_y * self.dy
+        along_track_m = (nadir_y - pixel_y) * self.dy if nadir_y > 0 else (pixel_y * self.dy)
 
         # Convert vessel heading to radians
         heading_rad = math.radians(vessel_heading_deg)
