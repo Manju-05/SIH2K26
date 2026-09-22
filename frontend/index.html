@@ -106,41 +106,73 @@
                     </div>
                 </div>
 
-                <!-- 1-Click Marine Survey Sites Bar -->
-                <div class="flex flex-col gap-1.5 pt-2 border-t border-[#1b2535]">
-                    <span class="text-[10px] uppercase font-mono-clean text-[#64748b]">Quick Marine Survey Sites:</span>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <button onclick="setMarineLocation(13.0827, 80.3850, 'Bay of Bengal Deep Shelf')" class="px-2 py-1 rounded bg-[#131d2c] hover:bg-[#1d2b3f] hover:border-[#38bdf8] text-[11px] font-mono-clean text-[#7dd3fc] border border-[#22334a] transition-all flex items-center gap-1">
-                            <span>🌊</span><span>Bay of Bengal Shelf</span>
-                        </button>
-                        <button onclick="setMarineLocation(9.2800, 79.1800, 'Gulf of Mannar Coral Reserve')" class="px-2 py-1 rounded bg-[#131d2c] hover:bg-[#1d2b3f] hover:border-[#38bdf8] text-[11px] font-mono-clean text-[#7dd3fc] border border-[#22334a] transition-all flex items-center gap-1">
-                            <span>🪸</span><span>Gulf of Mannar</span>
-                        </button>
-                        <button onclick="setMarineLocation(13.2500, 80.3600, 'Coromandel Utility Corridor')" class="px-2 py-1 rounded bg-[#131d2c] hover:bg-[#1d2b3f] hover:border-[#38bdf8] text-[11px] font-mono-clean text-[#7dd3fc] border border-[#22334a] transition-all flex items-center gap-1">
-                            <span>⚓</span><span>Coromandel</span>
-                        </button>
-                        <button onclick="setMarineLocation(11.6800, 92.8200, 'Andaman Trench Deep-Sea')" class="px-2 py-1 rounded bg-[#131d2c] hover:bg-[#1d2b3f] hover:border-[#38bdf8] text-[11px] font-mono-clean text-[#7dd3fc] border border-[#22334a] transition-all flex items-center gap-1">
-                            <span>🏝️</span><span>Andaman Trench</span>
-                        </button>
+                <!-- Dynamic Marine Survey Location Engine -->
+                <div class="flex flex-col gap-2 pt-2 border-t border-[#1b2535]">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] uppercase font-mono-clean text-[#64748b] flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[13px] text-[#38bdf8]">travel_explore</span>
+                            <span>Dynamic Survey Location & Basin Explorer:</span>
+                        </span>
+                        <span class="text-[10px] font-mono-clean text-[#38bdf8] flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[12px]">touch_app</span> Click Map to Georeference
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <!-- Dynamic Ocean Basin Selector -->
+                        <div class="sm:col-span-2">
+                            <select id="ocean-basin-select" onchange="selectOceanBasin(this.value)" class="w-full bg-[#080c14] border border-[#24334a] text-white text-xs px-2.5 py-1.5 rounded font-mono-clean focus:outline-none focus:border-[#38bdf8]">
+                                <option value="">🌐 Select Dynamic Global Ocean Basin...</option>
+                                <option value="13.0827,80.3850">🌊 Bay of Bengal (Deep Shelf - 13.08°N, 80.38°E)</option>
+                                <option value="18.9220,72.8347">⚓ Arabian Sea (Mumbai High Offshore - 18.92°N, 72.83°E)</option>
+                                <option value="9.2800,79.1800">🪸 Gulf of Mannar (Coral Marine Biosphere - 9.28°N, 79.18°E)</option>
+                                <option value="11.6800,92.8200">🏝️ Andaman Sea (Deep Trench Corridor - 11.68°N, 92.82°E)</option>
+                                <option value="8.0780,77.5410">🧭 Indian Ocean (Cape Comorin Junction - 8.07°N, 77.54°E)</option>
+                                <option value="25.276987,55.296249">🛢️ Persian Gulf (Offshore Energy Grid - 25.28°N, 55.30°E)</option>
+                                <option value="20.0000,38.5000">🔴 Red Sea Rift (Hydrothermal Corridor - 20.00°N, 38.50°E)</option>
+                                <option value="35.0000,18.0000">🏛️ Mediterranean Basin (Hellenic Trench - 35.00°N, 18.00°E)</option>
+                                <option value="56.5000,3.2000">⚡ North Sea (Subsea Infrastructure - 56.50°N, 3.20°E)</option>
+                                <option value="27.5000,-90.0000">🌊 Gulf of Mexico (Deepwater Horizon Basin - 27.50°N, 90.00°W)</option>
+                                <option value="14.5000,115.0000">🌏 South China Sea (Pelagic Swath - 14.50°N, 115.00°E)</option>
+                                <option value="11.3500,142.2000">🕳️ Mariana Trench (Challenger Deep Zone - 11.35°N, 142.20°E)</option>
+                            </select>
+                        </div>
+
+                        <!-- Dynamic Action Buttons: GPS + Random Ocean -->
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="useCurrentGPS()" class="flex-1 px-2 py-1.5 rounded bg-[#131d2c] hover:bg-[#1e2d42] hover:border-[#38bdf8] text-[11px] font-mono-clean text-[#7dd3fc] border border-[#22334a] transition-all flex items-center justify-center gap-1" title="Use your device GPS Location">
+                                <span>📍 My GPS</span>
+                            </button>
+                            <button onclick="randomOceanPoint()" class="flex-1 px-2 py-1.5 rounded bg-[#131d2c] hover:bg-[#1e2d42] hover:border-[#38bdf8] text-[11px] font-mono-clean text-[#7dd3fc] border border-[#22334a] transition-all flex items-center justify-center gap-1" title="Jump to dynamic random offshore coordinates">
+                                <span>🎲 Random</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Reference Coordinates & Sensitivity -->
+                <!-- Reference Coordinates & Sensitivity Slider -->
                 <div class="grid grid-cols-3 gap-3 pt-2 border-t border-[#1b2535]">
                     <div>
-                        <label class="text-[10px] uppercase font-mono-clean text-[#64748b] block mb-1">Survey Lat (° N)</label>
+                        <div class="flex justify-between items-center text-[10px] uppercase font-mono-clean text-[#64748b] mb-1">
+                            <span>Survey Lat (° N/S)</span>
+                        </div>
                         <input type="number" id="vessel-lat" step="0.0001" value="13.0827" class="w-full bg-[#080c14] border border-[#24334a] text-white text-xs px-2.5 py-1.5 rounded font-mono-clean focus:outline-none focus:border-[#38bdf8]"/>
                     </div>
                     <div>
-                        <label class="text-[10px] uppercase font-mono-clean text-[#64748b] block mb-1">Survey Lon (° E)</label>
+                        <div class="flex justify-between items-center text-[10px] uppercase font-mono-clean text-[#64748b] mb-1">
+                            <span>Survey Lon (° E/W)</span>
+                        </div>
                         <input type="number" id="vessel-lon" step="0.0001" value="80.3850" class="w-full bg-[#080c14] border border-[#24334a] text-white text-xs px-2.5 py-1.5 rounded font-mono-clean focus:outline-none focus:border-[#38bdf8]"/>
                     </div>
                     <div>
                         <div class="flex justify-between items-center text-[10px] uppercase font-mono-clean text-[#64748b] mb-1">
-                            <span>Sensitivity</span>
+                            <span class="flex items-center gap-1" title="Confidence threshold for YOLOv8 & Acoustic Physics Validator">
+                                <span>Sensitivity</span>
+                                <span class="material-symbols-outlined text-[11px] text-[#94a3b8] cursor-help" title="Low % = Higher sensitivity (detects faint/buried debris). High % = Lower sensitivity (requires strong acoustic highlight + shadow).">help</span>
+                            </span>
                             <span id="conf-val" class="text-[#38bdf8] font-bold">15%</span>
                         </div>
-                        <input type="range" id="conf-slider" min="5" max="80" value="15" class="w-full accent-[#38bdf8] h-2 bg-[#1a2536] rounded cursor-pointer mt-1"/>
+                        <input type="range" id="conf-slider" min="5" max="80" value="15" class="w-full accent-[#38bdf8] h-2 bg-[#1a2536] rounded cursor-pointer mt-1" title="Adjust AI confidence threshold"/>
                     </div>
                 </div>
             </div>

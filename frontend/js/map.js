@@ -61,6 +61,25 @@ class SonarGISMap {
         this.markersLayer = L.layerGroup().addTo(this.map);
         this.tracklineLayer = L.layerGroup().addTo(this.map);
 
+        // Click anywhere on map to dynamically set survey location
+        this.map.on('click', (e) => {
+            const lat = e.latlng.lat;
+            const lon = e.latlng.lng;
+            if (window.onMapLocationSelected) {
+                window.onMapLocationSelected(lat, lon);
+            }
+        });
+
+        // Mouse hover on map shows live coordinates in indicator
+        this.map.on('mousemove', (e) => {
+            const mapCoordsEl = document.getElementById("map-coords-indicator");
+            if (mapCoordsEl) {
+                const latDir = e.latlng.lat >= 0 ? "N" : "S";
+                const lonDir = e.latlng.lng >= 0 ? "E" : "W";
+                mapCoordsEl.textContent = `${Math.abs(e.latlng.lat).toFixed(6)}° ${latDir}, ${Math.abs(e.latlng.lng).toFixed(6)}° ${lonDir}`;
+            }
+        });
+
         // Plot initial survey origin
         this.plotVessel(defaultLat, defaultLon, 45.0);
     }

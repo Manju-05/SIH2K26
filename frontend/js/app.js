@@ -36,9 +36,17 @@ const SAMPLE_LOCATIONS = {
     "clean_seabed": { lat: 13.082700, lon: 80.385000, desc: "Bay of Bengal Calibration Area" }
 };
 
+let debounceTimer = null;
+let hasCustomLocationSet = false;
+
 document.addEventListener("DOMContentLoaded", () => {
     waterfallViewer = new SonarWaterfallViewer("waterfall-canvas");
     gisMap = new SonarGISMap("leaflet-map");
+
+    // Register global map click callback
+    window.onMapLocationSelected = (lat, lon) => {
+        setDynamicSurveyLocation(lat, lon, "Map Click");
+    };
 
     checkSystemStatus();
     setupEventListeners();
@@ -47,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupDragAndDrop();
 
     // Auto-load shipwreck sample on startup
-    loadSampleScan("shipwreck");
+    loadSampleScan("shipwreck", true);
 });
 
 function setupEventListeners() {
@@ -67,22 +75,36 @@ function setupEventListeners() {
     if (slider && badge) {
         slider.addEventListener("input", (e) => {
             badge.textContent = `${e.target.value}%`;
-            if (currentLoadedBlob) {
-                processSonarData(currentLoadedBlob);
-            }
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if (currentLoadedBlob) {
+                    processSonarData(currentLoadedBlob);
+                }
+            }, 80);
         });
     }
 
-    // Lat / Lon Inputs
+    // Lat / Lon Inputs with immediate dynamic updates
     const latInput = document.getElementById("vessel-lat");
     const lonInput = document.getElementById("vessel-lon");
     [latInput, lonInput].forEach(inp => {
         if (inp) {
-            inp.addEventListener("change", () => {
-                if (currentLoadedBlob) {
-                    processSonarData(currentLoadedBlob);
+            const handleCoordChange = () => {
+                hasCustomLocationSet = true;
+                const newLat = parseFloat(latInput.value);
+                const newLon = parseFloat(lonInput.value);
+                if (!isNaN(newLat) && !isNaN(newLon)) {
+                    recalculateAndRefreshCoordinates(newLat, newLon);
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        if (currentLoadedBlob) {
+                            processSonarData(currentLoadedBlob);
+                        }
+                    }, 250);
                 }
-            });
+            };
+            inp.addEventListener("input", handleCoordChange);
+            inp.addEventListener("change", handleCoordChange);
         }
     });
 
@@ -199,19 +221,130 @@ function setupCanvasTelemetry() {
     });
 }
 
-function setMarineLocation(lat, lon, desc) {
+function setDynamicSurveyLocation(lat, lon, desc = "Selected Location") {
+    hasCustomLocationSet = true;
     const latInput = document.getElementById("vessel-lat");
     const lonInput = document.getElementById("vessel-lon");
-    if (latInput) latInput.value = lat.toFixed(4);
-    if (lonInput) lonInput.value = lon.toFixed(4);
+    if (latInput) latInput.value = parseFloat(lat).toFixed(4);
+    if (lonInput) lonInput.value = parseFloat(lon).toFixed(4);
 
-    showToast(`Survey Location: ${desc} (${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E)`);
+    const latDir = lat >= 0 ? "N" : "S";
+    const lonDir = lon >= 0 ? "E" : "W";
+    const coordStr = `${Math.abs(lat).toFixed(4)}° ${latDir}, ${Math.abs(lon).toFixed(4)}° ${lonDir}`;
+
+    showToast(`Survey Origin: ${desc} (${coordStr})`);
+
+    recalculateAndRefreshCoordinates(parseFloat(lat), parseFloat(lon));
 
     if (currentLoadedBlob) {
-        processSonarData(currentLoadedBlob);
-    } else if (gisMap) {
-        gisMap.plotVessel(lat, lon, 45.0);
-        gisMap.map.setView([lat, lon], 14);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            processSonarData(currentLoadedBlob);
+        }, 200);
+    }
+}
+
+function selectOceanBasin(val) {
+    if (!val) return;
+    const parts = val.split(",");
+    if (parts.length === 2) {
+        const lat = parseFloat(parts[0]);
+        const lon = parseFloat(parts[1]);
+        const selectEl = document.getElementById("ocean-basin-select");
+        const basinName = selectEl ? selectEl.options[selectEl.selectedIndex].text.split("(")[0].trim() : "Ocean Basin";
+        setDynamicSurveyLocation(lat, lon, basinName);
+    }
+}
+
+function useCurrentGPS() {
+    if ("geolocation" in navigator) {
+        showToast("Acquiring GPS fix from device...");
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                setDynamicSurveyLocation(lat, lon, "Your GPS Device");
+            },
+            (err) => {
+                console.warn("GPS Geolocation failed or blocked:", err.message);
+                showToast("GPS access unavailable. Defaulted to coastal survey site.");
+                setDynamicSurveyLocation(13.0827, 80.3850, "Bay of Bengal (Default)");
+            },
+            { timeout: 8000, enableHighAccuracy: true }
+        );
+    } else {
+        showToast("Geolocation is not supported by your browser.");
+    }
+}
+
+const RANDOM_OCEAN_POINTS = [
+    { name: "Mariana Trench (Pacific Ocean)", lat: 11.3500, lon: 142.2000 },
+    { name: "Arabian Sea Offshore Corridor", lat: 18.9220, lon: 72.8347 },
+    { name: "Bay of Bengal Deep Shelf", lat: 13.0827, lon: 80.3850 },
+    { name: "Gulf of Mannar Marine Reserve", lat: 9.2800, lon: 79.1800 },
+    { name: "Andaman Deep Trench", lat: 11.6800, lon: 92.8200 },
+    { name: "Bermuda Ocean Trench (Atlantic)", lat: 25.0000, lon: -71.0000 },
+    { name: "Great Barrier Reef Marine Zone", lat: -18.2871, lon: 147.6992 },
+    { name: "Mid-Atlantic Hydrothermal Ridge", lat: 37.0000, lon: -32.0000 },
+    { name: "Sunda Trench (Indian Ocean)", lat: -10.3167, lon: 107.9500 },
+    { name: "North Sea Subsea Grid", lat: 56.5000, lon: 3.2000 },
+    { name: "Mediterranean Hellenic Trench", lat: 35.0000, lon: 18.0000 },
+    { name: "Red Sea Deep Corridor", lat: 20.0000, lon: 38.5000 }
+];
+
+function randomOceanPoint() {
+    const randomIndex = Math.floor(Math.random() * RANDOM_OCEAN_POINTS.length);
+    const pt = RANDOM_OCEAN_POINTS[randomIndex];
+    setDynamicSurveyLocation(pt.lat, pt.lon, pt.name);
+}
+
+function recalculateAndRefreshCoordinates(baseLat, baseLon) {
+    const heading = 45.0;
+    const nadirX = 320;
+    const nadirY = 320;
+    const dx = 0.05;
+    const dy = 0.08;
+    const EARTH_RADIUS = 6378137.0;
+
+    const headingRad = heading * Math.PI / 180.0;
+    const starboardRad = headingRad + (Math.PI / 2.0);
+
+    if (currentDetectionsData && currentDetectionsData.detections && currentDetectionsData.detections.length > 0) {
+        currentDetectionsData.detections.forEach(det => {
+            const [x1, y1, x2, y2] = det.bbox;
+            const cx = (x1 + x2) / 2.0;
+            const cy = (y1 + y2) / 2.0;
+
+            const crossTrackM = (cx - nadirX) * dx;
+            const alongTrackM = (nadirY - cy) * dy;
+
+            const dNorth = (alongTrackM * Math.cos(headingRad)) + (crossTrackM * Math.cos(starboardRad));
+            const dEast = (alongTrackM * Math.sin(headingRad)) + (crossTrackM * Math.sin(starboardRad));
+
+            const dLat = (dNorth / EARTH_RADIUS) * (180.0 / Math.PI);
+            const dLon = (dEast / (EARTH_RADIUS * Math.cos(baseLat * Math.PI / 180.0))) * (180.0 / Math.PI);
+
+            const targetLat = baseLat + dLat;
+            const targetLon = baseLon + dLon;
+
+            det.coordinates.latitude = targetLat;
+            det.coordinates.longitude = targetLon;
+            det.coordinates.geo_location_degrees = formatDegrees(targetLat, targetLon);
+            det.coordinates.latitude_deg = `${Math.abs(targetLat).toFixed(6)}° ${targetLat >= 0 ? 'N' : 'S'}`;
+            det.coordinates.longitude_deg = `${Math.abs(targetLon).toFixed(6)}° ${targetLon >= 0 ? 'E' : 'W'}`;
+        });
+
+        updatePredictionBanner(currentDetectionsData.detections, baseLat, baseLon);
+        updateReportsTable(currentDetectionsData.detections, baseLat, baseLon);
+        if (gisMap) {
+            gisMap.updateDetections(currentDetectionsData.detections, baseLat, baseLon, heading);
+        }
+    } else {
+        updatePredictionBanner([], baseLat, baseLon);
+        if (gisMap) {
+            gisMap.plotVessel(baseLat, baseLon, heading);
+            gisMap.map.setView([baseLat, baseLon], 14);
+        }
     }
 }
 
@@ -265,16 +398,18 @@ function clearActivePresetStyles() {
     });
 }
 
-async function loadSampleScan(sampleType) {
+async function loadSampleScan(sampleType, isInitialLoad = false) {
     setActivePresetStyle(sampleType);
 
-    // Auto-update survey coordinates to realistic marine location
-    const loc = SAMPLE_LOCATIONS[sampleType];
-    if (loc) {
-        const latInput = document.getElementById("vessel-lat");
-        const lonInput = document.getElementById("vessel-lon");
-        if (latInput) latInput.value = loc.lat.toFixed(4);
-        if (lonInput) lonInput.value = loc.lon.toFixed(4);
+    // Only set default coordinates if the user hasn't set their own custom dynamic location
+    if (!hasCustomLocationSet && isInitialLoad) {
+        const loc = SAMPLE_LOCATIONS[sampleType];
+        if (loc) {
+            const latInput = document.getElementById("vessel-lat");
+            const lonInput = document.getElementById("vessel-lon");
+            if (latInput) latInput.value = loc.lat.toFixed(4);
+            if (lonInput) lonInput.value = loc.lon.toFixed(4);
+        }
     }
 
     try {
