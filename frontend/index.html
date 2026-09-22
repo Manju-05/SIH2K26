@@ -7,7 +7,7 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,250 +15,225 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link rel="stylesheet" href="css/style.css"/>
 </head>
-<body class="min-h-screen bg-[#090d14] text-[#d1d5db] flex flex-col font-sans select-none antialiased">
+<body class="min-h-screen bg-[#070b12] text-[#d1d5db] flex flex-col font-sans select-none antialiased">
 
-    <!-- Top Header -->
-    <header class="h-12 bg-[#0c121c] border-b border-[#1b2535] px-5 flex items-center justify-between z-30 shrink-0">
+    <!-- Top Header Bar matching Mockup exactly + DND Button -->
+    <header class="h-14 bg-[#090e17] border-b border-[#162338] px-6 flex items-center justify-between z-30 shrink-0">
+        <!-- Left: Logo & NIOT Badge -->
         <div class="flex items-center gap-3">
-            <span class="w-2.5 h-2.5 rounded-full bg-[#38bdf8] shadow-[0_0_10px_#38bdf8]"></span>
-            <h1 class="text-sm font-bold text-white tracking-wide uppercase">FlowNex</h1>
-            <span class="text-xs text-[#475569]">|</span>
-            <span class="text-xs text-[#94a3b8] font-medium hidden sm:inline">Sonar Debris Classifier & Geolocation System</span>
-            <span class="text-[10px] font-mono-clean bg-[#162235] text-[#38bdf8] px-2 py-0.5 rounded border border-[#22364f]">SIH26057 • MoES / NIOT</span>
-        </div>
-        <div class="flex items-center gap-4">
-            <!-- Fast Keyboard Shortcuts Guide -->
-            <div class="hidden md:flex items-center gap-2 text-[10px] font-mono-clean text-[#64748b] bg-[#090e18] px-2.5 py-1 rounded border border-[#1b2535]">
-                <span>Shortcuts:</span>
-                <kbd class="px-1 py-0.5 bg-[#162235] text-[#38bdf8] rounded border border-[#22364f] font-bold">1-5</kbd><span>Scans</span>
-                <kbd class="px-1 py-0.5 bg-[#162235] text-[#38bdf8] rounded border border-[#22364f] font-bold">C</kbd><span>Copy GPS</span>
-                <kbd class="px-1 py-0.5 bg-[#162235] text-[#38bdf8] rounded border border-[#22364f] font-bold">E</kbd><span>CSV</span>
+            <div class="flex items-center gap-1.5 cursor-pointer" onclick="location.reload()">
+                <span class="text-lg font-extrabold tracking-wider text-white uppercase">FLOWNE</span>
+                <span class="relative text-lg font-extrabold tracking-wider text-[#38bdf8] uppercase">
+                    X
+                    <span class="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-[#38bdf8] shadow-[0_0_8px_#38bdf8]"></span>
+                </span>
             </div>
-            <!-- Model Status -->
-            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#10b981]/10 border border-[#10b981]/30 text-xs font-mono-clean text-[#6ee7b7]">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
-                <span id="engine-status-text">AI MODEL: ONNX YOLOv8s (ONLINE)</span>
+            <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0d1624] text-[#38bdf8] border border-[#1b2b42] text-[11px] font-mono-clean font-medium ml-2">
+                <span class="material-symbols-outlined text-[13px] text-[#38bdf8]">public</span>
+                <span>SIH26057 • MoES / NIOT</span>
+            </div>
+        </div>
+
+        <!-- Center: Keyboard Shortcuts Pill -->
+        <div class="hidden md:flex items-center gap-2 bg-[#0d1624] border border-[#1b2b42] px-3 py-1 rounded-full text-xs font-mono-clean text-[#94a3b8] cursor-pointer hover:border-[#38bdf8] transition-colors" onclick="openShortcutsModal()" title="View all keyboard shortcuts">
+            <span>Keyboard Shortcuts</span>
+            <kbd class="px-1.5 py-0.5 bg-[#172336] text-[#cbd5e1] rounded border border-[#23354d] text-[10px] font-bold">Alt</kbd>
+            <kbd class="px-1.5 py-0.5 bg-[#172336] text-[#cbd5e1] rounded border border-[#23354d] text-[10px] font-bold">K</kbd>
+        </div>
+
+        <!-- Right: Day and Night Mode (DND) & AI Model Status -->
+        <div class="flex items-center gap-3">
+            <!-- Day and Night (DND) Mode Toggle Button -->
+            <button id="theme-toggle-btn" onclick="toggleDayNightMode()" class="theme-toggle-btn night-mode flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono-clean transition-all" title="Toggle Day and Night Mode (DND / Theme)">
+                <span id="theme-icon" class="text-[13px]">🌙</span>
+                <span id="theme-label" class="font-bold tracking-wide">NIGHT</span>
+            </button>
+
+            <!-- AI Model Online Pill -->
+            <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-[#052417] border border-[#10b981]/40 text-xs font-mono-clean text-[#34d399] font-medium shadow-[0_0_10px_rgba(16,185,129,0.15)]">
+                <span class="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></span>
+                <span id="engine-status-text">AI MODEL: ONNX RUNTIME (ONLINE)</span>
             </div>
         </div>
     </header>
 
-    <!-- Main Workspace (2-Column Grid) -->
+    <!-- Main Workspace (2-Column Grid matching Mockup) -->
     <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 overflow-y-auto">
 
-        <!-- LEFT COLUMN: Sonar Image & Prediction (Cols 1-7) -->
+        <!-- LEFT COLUMN: Sonar Image & Prediction (Cols 1-7, ~58% width) -->
         <section class="lg:col-span-7 flex flex-col gap-4">
             
-            <!-- Controls Card: Upload + Presets + Marine Sites -->
-            <div class="bg-[#0e1420] border border-[#1e2a3c] rounded-xl p-4 flex flex-col gap-3 shadow-lg">
+            <!-- Card 1: SONAR IMAGE INPUT -->
+            <div class="glass-panel p-4 flex flex-col gap-3">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-[#94a3b8] flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[15px] text-[#38bdf8]">image</span>
-                        <span>1. Sonar Image Input & Fast Presets</span>
-                    </span>
-                    <span class="text-[10px] font-mono-clean text-[#64748b]">Acoustic SSS Tiles (.jpg, .png, .tif)</span>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-[#94a3b8] flex items-center gap-1.5">
+                        <span>SONAR IMAGE INPUT</span>
+                    </h2>
+                    <span class="text-[10px] font-mono-clean text-[#64748b]">Side-Scan Acoustic Swath</span>
                 </div>
 
-                <!-- Hidden Input + Drop Zone -->
-                <input type="file" id="file-input" accept="image/*" class="hidden"/>
-                <div id="drop-zone" class="w-full p-3.5 border-2 border-dashed border-[#24334a] hover:border-[#38bdf8] bg-[#080c14] rounded-lg flex items-center justify-center gap-3 cursor-pointer transition-all duration-200" onclick="document.getElementById('file-input').click()">
-                    <span class="material-symbols-outlined text-[#38bdf8] text-2xl">upload_file</span>
-                    <div class="text-left">
-                        <p class="text-xs font-medium text-white flex items-center gap-1.5">
-                            <span>Click or Drag & Drop Sonar Scan</span>
-                            <span id="loaded-file-badge" class="hidden px-1.5 py-0.2 rounded text-[10px] bg-[#38bdf8]/20 text-[#38bdf8] border border-[#38bdf8]/40 font-mono-clean"></span>
-                        </p>
-                        <p class="text-[11px] text-[#64748b]">Upload any acoustic image to predict debris type & exact georeferenced degrees</p>
-                    </div>
-                </div>
-
-                <!-- 1-Click Sample Presets with Shortcut Badges -->
-                <div class="flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between text-[11px]">
-                        <span class="font-medium text-[#94a3b8]">Instant Test Sonar Scans:</span>
-                        <span class="text-[10px] font-mono-clean text-[#64748b]">Press keys 1 to 5</span>
-                    </div>
-                    <div class="grid grid-cols-5 gap-2">
-                        <button id="preset-shipwreck" class="preset-btn px-2 py-2 text-xs font-medium text-white bg-[#151f2e] hover:bg-[#1e2d42] border border-[#223249] rounded-lg transition-all text-center flex flex-col items-center gap-1 relative" onclick="loadSampleScan('shipwreck')">
-                            <span class="absolute top-1 right-1.5 text-[9px] font-mono-clean text-[#64748b]">1</span>
-                            <span class="text-base">🚢</span>
-                            <span class="text-[11px] font-semibold">Shipwreck</span>
-                        </button>
-                        <button id="preset-ghost_net" class="preset-btn px-2 py-2 text-xs font-medium text-white bg-[#151f2e] hover:bg-[#1e2d42] border border-[#223249] rounded-lg transition-all text-center flex flex-col items-center gap-1 relative" onclick="loadSampleScan('ghost_net')">
-                            <span class="absolute top-1 right-1.5 text-[9px] font-mono-clean text-[#64748b]">2</span>
-                            <span class="text-base">🕸️</span>
-                            <span class="text-[11px] font-semibold">Ghost Net</span>
-                        </button>
-                        <button id="preset-submarine_pipeline" class="preset-btn px-2 py-2 text-xs font-medium text-white bg-[#151f2e] hover:bg-[#1e2d42] border border-[#223249] rounded-lg transition-all text-center flex flex-col items-center gap-1 relative" onclick="loadSampleScan('submarine_pipeline')">
-                            <span class="absolute top-1 right-1.5 text-[9px] font-mono-clean text-[#64748b]">3</span>
-                            <span class="text-base">📏</span>
-                            <span class="text-[11px] font-semibold">Pipeline</span>
-                        </button>
-                        <button id="preset-mine_cylinder" class="preset-btn px-2 py-2 text-xs font-medium text-white bg-[#151f2e] hover:bg-[#1e2d42] border border-[#223249] rounded-lg transition-all text-center flex flex-col items-center gap-1 relative" onclick="loadSampleScan('mine_cylinder')">
-                            <span class="absolute top-1 right-1.5 text-[9px] font-mono-clean text-[#64748b]">4</span>
-                            <span class="text-base">💣</span>
-                            <span class="text-[11px] font-semibold">Mine UXO</span>
-                        </button>
-                        <button id="preset-clean_seabed" class="preset-btn px-2 py-2 text-xs font-medium text-white bg-[#151f2e] hover:bg-[#1e2d42] border border-[#223249] rounded-lg transition-all text-center flex flex-col items-center gap-1 relative" onclick="loadSampleScan('clean_seabed')">
-                            <span class="absolute top-1 right-1.5 text-[9px] font-mono-clean text-[#64748b]">5</span>
-                            <span class="text-base">🌊</span>
-                            <span class="text-[11px] font-semibold">Clean Bed</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Dynamic Marine Survey Location Engine -->
-                <div class="flex flex-col gap-2 pt-2 border-t border-[#1b2535]">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] uppercase font-mono-clean text-[#64748b] flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[13px] text-[#38bdf8]">travel_explore</span>
-                            <span>Dynamic Survey Location & Basin Explorer:</span>
-                        </span>
-                        <span class="text-[10px] font-mono-clean text-[#38bdf8] flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[12px]">touch_app</span> Click Map to Georeference
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <!-- Dynamic Ocean Basin Selector -->
-                        <div class="sm:col-span-2">
-                            <select id="ocean-basin-select" onchange="selectOceanBasin(this.value)" class="w-full bg-[#080c14] border border-[#24334a] text-white text-xs px-2.5 py-1.5 rounded font-mono-clean focus:outline-none focus:border-[#38bdf8]">
-                                <option value="">🌐 Select Dynamic Global Ocean Basin...</option>
-                                <option value="13.0827,80.3850">🌊 Bay of Bengal (Deep Shelf - 13.08°N, 80.38°E)</option>
-                                <option value="18.9220,72.8347">⚓ Arabian Sea (Mumbai High Offshore - 18.92°N, 72.83°E)</option>
-                                <option value="9.2800,79.1800">🪸 Gulf of Mannar (Coral Marine Biosphere - 9.28°N, 79.18°E)</option>
-                                <option value="11.6800,92.8200">🏝️ Andaman Sea (Deep Trench Corridor - 11.68°N, 92.82°E)</option>
-                                <option value="8.0780,77.5410">🧭 Indian Ocean (Cape Comorin Junction - 8.07°N, 77.54°E)</option>
-                                <option value="25.276987,55.296249">🛢️ Persian Gulf (Offshore Energy Grid - 25.28°N, 55.30°E)</option>
-                                <option value="20.0000,38.5000">🔴 Red Sea Rift (Hydrothermal Corridor - 20.00°N, 38.50°E)</option>
-                                <option value="35.0000,18.0000">🏛️ Mediterranean Basin (Hellenic Trench - 35.00°N, 18.00°E)</option>
-                                <option value="56.5000,3.2000">⚡ North Sea (Subsea Infrastructure - 56.50°N, 3.20°E)</option>
-                                <option value="27.5000,-90.0000">🌊 Gulf of Mexico (Deepwater Horizon Basin - 27.50°N, 90.00°W)</option>
-                                <option value="14.5000,115.0000">🌏 South China Sea (Pelagic Swath - 14.50°N, 115.00°E)</option>
-                                <option value="11.3500,142.2000">🕳️ Mariana Trench (Challenger Deep Zone - 11.35°N, 142.20°E)</option>
-                            </select>
+                <!-- Split Container: Drag & Drop Zone (Left) + Controls (Right) -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-stretch">
+                    <!-- Left: Drag and drop zone -->
+                    <div class="md:col-span-4 flex flex-col">
+                        <input type="file" id="file-input" accept="image/*" class="hidden"/>
+                        <div id="drop-zone" class="flex-1 border-2 border-dashed border-[#1e3047] hover:border-[#38bdf8] bg-[#070b13] rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group min-h-[160px]" onclick="document.getElementById('file-input').click()">
+                            <div class="w-10 h-10 rounded-full bg-[#0e1b2b] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-[#38bdf8] text-2xl">upload</span>
+                            </div>
+                            <p class="text-xs font-semibold text-white tracking-wide">Drag and drop zone</p>
+                            <p class="text-[11px] text-[#64748b] mt-0.5">Upload a file here</p>
+                            <span id="loaded-file-badge" class="hidden mt-2 px-2 py-0.5 rounded text-[10px] bg-[#38bdf8]/20 text-[#38bdf8] border border-[#38bdf8]/40 font-mono-clean truncate max-w-full"></span>
                         </div>
+                    </div>
 
-                        <!-- Dynamic Action Buttons: GPS + Random Ocean -->
-                        <div class="flex items-center gap-1.5">
-                            <button onclick="useCurrentGPS()" class="flex-1 px-2 py-1.5 rounded bg-[#131d2c] hover:bg-[#1e2d42] hover:border-[#38bdf8] text-[11px] font-mono-clean text-[#7dd3fc] border border-[#22334a] transition-all flex items-center justify-center gap-1" title="Use your device GPS Location">
-                                <span>📍 My GPS</span>
+                    <!-- Right: Presets + Ocean Explorer + Inputs -->
+                    <div class="md:col-span-8 flex flex-col justify-between gap-2.5">
+                        <!-- 5 Quick Preset Buttons Row -->
+                        <div class="grid grid-cols-5 gap-1.5">
+                            <button id="preset-shipwreck" class="preset-btn active-preset p-2 rounded-lg text-center flex flex-col items-center justify-center gap-1" onclick="loadSampleScan('shipwreck')">
+                                <span class="text-lg">🚢</span>
+                                <span class="text-[11px] font-semibold text-white">Shipwreck</span>
                             </button>
-                            <button onclick="randomOceanPoint()" class="flex-1 px-2 py-1.5 rounded bg-[#131d2c] hover:bg-[#1e2d42] hover:border-[#38bdf8] text-[11px] font-mono-clean text-[#7dd3fc] border border-[#22334a] transition-all flex items-center justify-center gap-1" title="Jump to dynamic random offshore coordinates">
-                                <span>🎲 Random</span>
+                            <button id="preset-ghost_net" class="preset-btn p-2 rounded-lg text-center flex flex-col items-center justify-center gap-1" onclick="loadSampleScan('ghost_net')">
+                                <span class="text-lg">🕸️</span>
+                                <span class="text-[11px] font-semibold text-white">Ghost Net</span>
+                            </button>
+                            <button id="preset-submarine_pipeline" class="preset-btn p-2 rounded-lg text-center flex flex-col items-center justify-center gap-1" onclick="loadSampleScan('submarine_pipeline')">
+                                <span class="text-lg">🛢️</span>
+                                <span class="text-[11px] font-semibold text-white">Pipeline</span>
+                            </button>
+                            <button id="preset-mine_cylinder" class="preset-btn p-2 rounded-lg text-center flex flex-col items-center justify-center gap-1" onclick="loadSampleScan('mine_cylinder')">
+                                <span class="text-lg">💣</span>
+                                <span class="text-[11px] font-semibold text-white">Mine UXO</span>
+                            </button>
+                            <button id="preset-clean_seabed" class="preset-btn p-2 rounded-lg text-center flex flex-col items-center justify-center gap-1" onclick="loadSampleScan('clean_seabed')">
+                                <span class="text-lg">🌊</span>
+                                <span class="text-[11px] font-semibold text-white">Clean Bed</span>
                             </button>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Reference Coordinates & Sensitivity Slider -->
-                <div class="grid grid-cols-3 gap-3 pt-2 border-t border-[#1b2535]">
-                    <div>
-                        <div class="flex justify-between items-center text-[10px] uppercase font-mono-clean text-[#64748b] mb-1">
-                            <span>Survey Lat (° N/S)</span>
+                        <!-- Ocean Basin Explorer + GPS & Random Buttons -->
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <div class="sm:col-span-8">
+                                <select id="ocean-basin-select" onchange="selectOceanBasin(this.value)" class="w-full bg-[#070b13] border border-[#1b2b40] text-white text-xs px-3 py-2 rounded-lg font-mono-clean focus:outline-none focus:border-[#38bdf8]">
+                                    <option value="">Ocean Basin Explorer</option>
+                                    <option value="13.0827,80.3850">Bay of Bengal (Deep Shelf - 13.08°N, 80.38°E)</option>
+                                    <option value="18.9220,72.8347">Arabian Sea (Mumbai High - 18.92°N, 72.83°E)</option>
+                                    <option value="9.2800,79.1800">Gulf of Mannar (Coral Marine - 9.28°N, 79.18°E)</option>
+                                    <option value="11.6800,92.8200">Andaman Sea (Deep Trench - 11.68°N, 92.82°E)</option>
+                                    <option value="8.0780,77.5410">Indian Ocean (Cape Comorin - 8.07°N, 77.54°E)</option>
+                                    <option value="25.276987,55.296249">Persian Gulf (Offshore Grid - 25.28°N, 55.30°E)</option>
+                                    <option value="20.0000,38.5000">Red Sea Rift (20.00°N, 38.50°E)</option>
+                                    <option value="35.0000,18.0000">Mediterranean Basin (35.00°N, 18.00°E)</option>
+                                    <option value="56.5000,3.2000">North Sea Subsea Grid (56.50°N, 3.20°E)</option>
+                                    <option value="27.5000,-90.0000">Gulf of Mexico Basin (27.50°N, 90.00°W)</option>
+                                    <option value="11.3500,142.2000">Mariana Trench (Challenger Deep - 11.35°N, 142.20°E)</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-4 flex items-center gap-1.5">
+                                <button onclick="useCurrentGPS()" class="flex-1 px-2.5 py-2 rounded-lg bg-[#111a28] hover:bg-[#182436] hover:border-[#38bdf8] text-xs font-mono-clean text-[#cbd5e1] border border-[#22344d] transition-all flex items-center justify-center font-medium" title="Use your device GPS Location">
+                                    <span>GPS</span>
+                                </button>
+                                <button onclick="randomOceanPoint()" class="flex-1 px-2.5 py-2 rounded-lg bg-[#111a28] hover:bg-[#182436] hover:border-[#38bdf8] text-xs font-mono-clean text-[#cbd5e1] border border-[#22344d] transition-all flex items-center justify-center font-medium" title="Jump to dynamic random offshore coordinates">
+                                    <span>Random</span>
+                                </button>
+                            </div>
                         </div>
-                        <input type="number" id="vessel-lat" step="0.0001" value="13.0827" class="w-full bg-[#080c14] border border-[#24334a] text-white text-xs px-2.5 py-1.5 rounded font-mono-clean focus:outline-none focus:border-[#38bdf8]"/>
-                    </div>
-                    <div>
-                        <div class="flex justify-between items-center text-[10px] uppercase font-mono-clean text-[#64748b] mb-1">
-                            <span>Survey Lon (° E/W)</span>
+
+                        <!-- Coordinates & Sensitivity Slider -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div>
+                                <label class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] block mb-1">Survey Lat</label>
+                                <input type="number" id="vessel-lat" step="0.0001" value="13.0827" class="w-full bg-[#070b13] border border-[#1b2b40] text-white text-xs px-2.5 py-1.5 rounded-lg font-mono-clean focus:outline-none focus:border-[#38bdf8]"/>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] block mb-1">Survey Lon</label>
+                                <input type="number" id="vessel-lon" step="0.0001" value="80.3850" class="w-full bg-[#070b13] border border-[#1b2b40] text-white text-xs px-2.5 py-1.5 rounded-lg font-mono-clean focus:outline-none focus:border-[#38bdf8]"/>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-[#64748b] mb-1">
+                                    <span>Sensitivity</span>
+                                    <span id="conf-val" class="text-[#38bdf8]">15%</span>
+                                </div>
+                                <input type="range" id="conf-slider" min="5" max="80" value="15" class="w-full mt-1.5" title="Adjust AI confidence threshold"/>
+                            </div>
                         </div>
-                        <input type="number" id="vessel-lon" step="0.0001" value="80.3850" class="w-full bg-[#080c14] border border-[#24334a] text-white text-xs px-2.5 py-1.5 rounded font-mono-clean focus:outline-none focus:border-[#38bdf8]"/>
-                    </div>
-                    <div>
-                        <div class="flex justify-between items-center text-[10px] uppercase font-mono-clean text-[#64748b] mb-1">
-                            <span class="flex items-center gap-1" title="Confidence threshold for YOLOv8 & Acoustic Physics Validator">
-                                <span>Sensitivity</span>
-                                <span class="material-symbols-outlined text-[11px] text-[#94a3b8] cursor-help" title="Low % = Higher sensitivity (detects faint/buried debris). High % = Lower sensitivity (requires strong acoustic highlight + shadow).">help</span>
-                            </span>
-                            <span id="conf-val" class="text-[#38bdf8] font-bold">15%</span>
-                        </div>
-                        <input type="range" id="conf-slider" min="5" max="80" value="15" class="w-full accent-[#38bdf8] h-2 bg-[#1a2536] rounded cursor-pointer mt-1" title="Adjust AI confidence threshold"/>
                     </div>
                 </div>
             </div>
 
-            <!-- Prediction Result Highlight Banner -->
-            <div id="prediction-banner" class="bg-[#0e1420] border-2 border-[#1e2a3c] rounded-xl p-4 flex items-center justify-between transition-all duration-200 shadow-md">
-                <div class="flex items-center gap-3">
-                    <div id="prediction-icon" class="w-11 h-11 rounded-lg bg-[#38bdf8]/15 border border-[#38bdf8]/30 flex items-center justify-center text-2xl">
-                        🔍
-                    </div>
-                    <div>
-                        <div class="text-[10px] uppercase font-mono-clean text-[#64748b]">AI Model Prediction</div>
-                        <div id="prediction-title" class="text-base font-bold text-white tracking-wide">
-                            Analyzing Sonar Image...
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col items-end gap-1.5">
-                    <span id="prediction-confidence-badge" class="px-2.5 py-0.5 rounded-full text-xs font-mono-clean font-bold bg-[#1e2a3c] text-white">
-                        --% Confidence
+            <!-- Card 2: AI PREDICTION BANNER matching Mockup -->
+            <div id="prediction-banner" class="prediction-card-glow rounded-xl p-4 flex flex-col gap-2 shadow-md">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">AI PREDICTION BANNER</span>
+                    <span id="prediction-confidence-badge" class="px-2.5 py-0.5 rounded-md text-xs font-mono-clean font-bold bg-[#052e16] text-[#4ade80] border border-[#22c55e]/40 shadow-[0_0_8px_rgba(34,197,94,0.2)]">
+                        94%
                     </span>
-                    <span id="prediction-coords-badge" class="text-xs font-mono-clean text-[#38bdf8]">
-                        Lat / Lon: Pending
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div id="prediction-title-group" class="flex items-center gap-2 text-base font-bold text-white tracking-wide">
+                        <span id="prediction-icon" class="text-xl">🚢</span>
+                        <span id="prediction-title">SHIPWRECK (MARITIME WRECKAGE)</span>
+                    </div>
+                    <span id="prediction-coords-badge" class="text-xs font-mono-clean text-[#38bdf8] font-semibold tracking-wide">
+                        WGS84: 13.08270, 80.38500
                     </span>
                 </div>
             </div>
 
-            <!-- Sonar Waterfall Canvas Display with Cursor Telemetry -->
-            <div class="bg-[#0e1420] border border-[#1e2a3c] rounded-xl p-3 flex flex-col gap-2 shadow-lg">
+            <!-- Card 3: ACOUSTIC WATERFALL CANVAS matching Mockup -->
+            <div class="glass-panel p-3.5 flex flex-col gap-2">
                 <div class="flex items-center justify-between text-xs px-1">
-                    <span class="font-medium text-[#94a3b8] flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[15px] text-[#38bdf8]">grid_view</span>
-                        <span>Acoustic Waterfall Swath & Bounding Box</span>
+                    <span class="font-bold uppercase tracking-wider text-[#94a3b8]">
+                        ACOUSTIC WATERFALL CANVAS
                     </span>
                     <div id="canvas-cursor-telemetry" class="font-mono-clean text-[11px] text-[#38bdf8]">
                         Range: 0.0m | Heading: 45.0°
                     </div>
                 </div>
-                <div class="w-full flex items-center justify-center bg-[#05080e] rounded-lg p-2 border border-[#17202f] relative">
+                <div class="w-full flex items-center justify-center bg-[#05080e] rounded-lg p-2 border border-[#162234] relative">
                     <canvas id="waterfall-canvas" width="640" height="640" class="max-w-full h-auto max-h-[460px] object-contain rounded cursor-crosshair"></canvas>
                 </div>
             </div>
 
         </section>
 
-        <!-- RIGHT COLUMN: Geolocation Report Table & Map (Cols 8-12) -->
+        <!-- RIGHT COLUMN: Geolocation Report Table & Map (Cols 8-12, ~42% width) -->
         <section class="lg:col-span-5 flex flex-col gap-4">
 
-            <!-- Report Section Card -->
-            <div class="bg-[#0e1420] border border-[#1e2a3c] rounded-xl p-4 flex flex-col gap-3 shadow-lg">
-                <div class="flex items-center justify-between pb-2 border-b border-[#1e2a3c]">
-                    <div>
-                        <h2 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-[16px] text-[#38bdf8]">description</span>
-                            <span>Debris Geolocation Report</span>
-                        </h2>
-                        <p class="text-[11px] font-mono-clean text-[#64748b]">Coordinates in geodetic degrees for recovery vessels</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="copyAllTargets()" class="flex items-center gap-1 text-xs font-mono-clean bg-[#151f2e] hover:bg-[#1e2d42] text-[#38bdf8] hover:text-white px-2.5 py-1.5 rounded border border-[#223249] transition-colors" title="Copy all detected coordinates to clipboard">
-                            <span>📋 Copy All</span>
+            <!-- Card 4: DEBRIS GEOLOCATION REPORT matching Mockup -->
+            <div class="glass-panel p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between pb-2 border-b border-[#18263a]">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-[#94a3b8]">
+                        DEBRIS GEOLOCATION REPORT
+                    </h2>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="copyAllTargets()" class="px-2.5 py-1 rounded text-xs font-mono-clean bg-[#111a28] hover:bg-[#182436] text-[#cbd5e1] border border-[#22344d] transition-colors" title="Copy all detected coordinates">
+                            Copy All
                         </button>
-                        <button class="flex items-center gap-1 text-xs font-mono-clean bg-[#151f2e] hover:bg-[#1e2d42] text-[#38bdf8] hover:text-white px-2.5 py-1.5 rounded border border-[#223249] transition-colors" onclick="exportCSV()" title="Download CSV Report with Degrees (Press E)">
-                            <span class="material-symbols-outlined text-[14px]">table_chart</span>
-                            <span>CSV</span>
+                        <button onclick="exportCSV()" class="px-2.5 py-1 rounded text-xs font-mono-clean bg-[#111a28] hover:bg-[#182436] text-[#cbd5e1] border border-[#22344d] transition-colors" title="Download CSV Report">
+                            CSV
                         </button>
-                        <button class="flex items-center gap-1 text-xs font-mono-clean bg-[#151f2e] hover:bg-[#1e2d42] text-[#10b981] hover:text-white px-2.5 py-1.5 rounded border border-[#223249] transition-colors" onclick="exportGeoJSON()" title="Download GeoJSON (Press G)">
-                            <span class="material-symbols-outlined text-[14px]">public</span>
-                            <span>GeoJSON</span>
+                        <button onclick="exportGeoJSON()" class="px-2.5 py-1 rounded text-xs font-mono-clean bg-[#111a28] hover:bg-[#182436] text-[#cbd5e1] border border-[#22344d] transition-colors" title="Download GeoJSON">
+                            GeoJSON
                         </button>
                     </div>
                 </div>
 
-                <!-- Report Table -->
-                <div class="w-full overflow-x-auto rounded-lg border border-[#1e2a3c] bg-[#080c14]">
+                <!-- Report Table matching Mockup Columns exactly -->
+                <div class="w-full overflow-x-auto rounded-lg border border-[#18263a] bg-[#070b13]">
                     <table class="w-full text-left font-mono-clean text-xs">
                         <thead>
-                            <tr class="bg-[#121927] border-b border-[#1e2a3c] text-[10px] text-[#64748b] uppercase">
-                                <th class="py-2 px-3">#</th>
-                                <th class="py-2 px-3">Debris Type</th>
-                                <th class="py-2 px-3">Conf</th>
-                                <th class="py-2 px-3">Geo Location (Degrees)</th>
-                                <th class="py-2 px-3">Size (L×W)</th>
+                            <tr class="bg-[#0c1320] border-b border-[#18263a] text-[10px] text-[#64748b] uppercase tracking-wider">
+                                <th class="py-2.5 px-3">#</th>
+                                <th class="py-2.5 px-3">Debris Type</th>
+                                <th class="py-2.5 px-3">Confidence</th>
+                                <th class="py-2.5 px-3">Geo Location</th>
+                                <th class="py-2.5 px-3">Size</th>
                             </tr>
                         </thead>
-                        <tbody id="reports-table-body" class="divide-y divide-[#1e2a3c]/60 text-[#d1d5db]">
+                        <tbody id="reports-table-body" class="divide-y divide-[#18263a]/50 text-[#d1d5db]">
                             <tr>
                                 <td colspan="5" class="py-8 text-center text-[#64748b]">No debris detected yet. Upload an image above.</td>
                             </tr>
@@ -267,18 +242,14 @@
                 </div>
             </div>
 
-            <!-- Geolocated Interactive Map Card -->
-            <div class="bg-[#0e1420] border border-[#1e2a3c] rounded-xl p-4 flex flex-col gap-3 shadow-lg flex-1 min-h-[350px]">
+            <!-- Card 5: GIS SEAFLOOR GEOLOCATION matching Mockup -->
+            <div class="glass-panel p-4 flex flex-col gap-3 flex-1 min-h-[360px]">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-xs font-semibold uppercase tracking-wider text-[#94a3b8] flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-[15px] text-[#38bdf8]">map</span>
-                            <span>GIS Seafloor Geolocation</span>
-                        </h3>
-                        <p class="text-[11px] font-mono-clean text-[#64748b]">WGS84 Bathymetry & Satellite Basemap</p>
-                    </div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-[#94a3b8]">
+                        GIS SEAFLOOR GEOLOCATION
+                    </h3>
                     <div class="flex items-center gap-2">
-                        <button onclick="if(gisMap) gisMap.resetView()" class="px-2 py-0.5 rounded bg-[#131d2c] hover:bg-[#1e2d42] text-[10px] font-mono-clean text-[#94a3b8] hover:text-white border border-[#22334a]" title="Reset Zoom">
+                        <button onclick="if(gisMap) gisMap.resetView()" class="px-2 py-0.5 rounded bg-[#111a28] hover:bg-[#182436] text-[10px] font-mono-clean text-[#94a3b8] hover:text-white border border-[#22344d]" title="Reset Center">
                             🎯 Center
                         </button>
                         <span id="map-coords-indicator" class="text-xs font-mono-clean text-[#38bdf8]">
@@ -286,14 +257,64 @@
                         </span>
                     </div>
                 </div>
-                <div class="flex-1 w-full rounded-lg overflow-hidden border border-[#1e2a3c] min-h-[280px] relative">
-                    <div id="leaflet-map" class="w-full h-full min-h-[280px]"></div>
+                <div class="flex-1 w-full rounded-lg overflow-hidden border border-[#18263a] min-h-[290px] relative">
+                    <div id="leaflet-map" class="w-full h-full min-h-[290px]"></div>
                 </div>
             </div>
 
         </section>
 
     </main>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcuts-modal" class="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-[#0d1624] border border-[#1e324c] rounded-2xl max-w-md w-full p-5 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-[#1b2b42]">
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#38bdf8] text-base">keyboard</span>
+                    <span>Global Keyboard Shortcuts</span>
+                </h3>
+                <button onclick="closeShortcutsModal()" class="text-[#64748b] hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5 py-4 font-mono-clean text-xs">
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Key 1</span>
+                    <span class="text-white font-semibold">🚢 Shipwreck</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Key 2</span>
+                    <span class="text-white font-semibold">🕸️ Ghost Net</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Key 3</span>
+                    <span class="text-white font-semibold">🛢️ Pipeline</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Key 4</span>
+                    <span class="text-white font-semibold">💣 Mine UXO</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Key 5</span>
+                    <span class="text-white font-semibold">🌊 Clean Bed</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Key C</span>
+                    <span class="text-[#38bdf8] font-semibold">Copy GPS</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Key E</span>
+                    <span class="text-[#38bdf8] font-semibold">Export CSV</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Alt + K</span>
+                    <span class="text-[#38bdf8] font-semibold">Shortcuts</span>
+                </div>
+            </div>
+            <button onclick="closeShortcutsModal()" class="w-full py-2 bg-[#172336] hover:bg-[#1e2f47] text-white rounded-lg text-xs font-semibold tracking-wider uppercase transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

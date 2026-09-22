@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupKeyboardShortcuts();
     setupCanvasTelemetry();
     setupDragAndDrop();
+    initTheme();
 
     // Auto-load shipwreck sample on startup
     loadSampleScan("shipwreck", true);
@@ -163,6 +164,13 @@ function setupDragAndDrop() {
 
 function setupKeyboardShortcuts() {
     window.addEventListener("keydown", (e) => {
+        // Toggle shortcuts modal on Alt+K
+        if (e.altKey && (e.key === "k" || e.key === "K")) {
+            e.preventDefault();
+            toggleShortcutsModal();
+            return;
+        }
+
         // Ignore if user is typing in an input
         if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
@@ -181,6 +189,77 @@ function setupKeyboardShortcuts() {
         else if (key === "E") exportCSV();
         else if (key === "G") exportGeoJSON();
     });
+}
+
+// Day and Night (DND) Mode Toggle Handlers
+let currentTheme = localStorage.getItem("flownex-theme") || "night";
+
+function initTheme() {
+    applyTheme(currentTheme, false);
+}
+
+function applyTheme(theme, showFeedback = true) {
+    currentTheme = theme;
+    localStorage.setItem("flownex-theme", theme);
+    const htmlEl = document.documentElement;
+    const btn = document.getElementById("theme-toggle-btn");
+    const icon = document.getElementById("theme-icon");
+    const label = document.getElementById("theme-label");
+
+    if (theme === "day") {
+        htmlEl.classList.remove("dark");
+        htmlEl.classList.add("light");
+        if (btn) {
+            btn.className = "theme-toggle-btn day-mode flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono-clean transition-all shadow-sm";
+        }
+        if (icon) icon.textContent = "☀️";
+        if (label) label.textContent = "DAY";
+        if (showFeedback) showToast("Day Mode Activated");
+    } else {
+        htmlEl.classList.remove("light");
+        htmlEl.classList.add("dark");
+        if (btn) {
+            btn.className = "theme-toggle-btn night-mode flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono-clean transition-all shadow-sm";
+        }
+        if (icon) icon.textContent = "🌙";
+        if (label) label.textContent = "NIGHT";
+        if (showFeedback) showToast("Night Mode Activated");
+    }
+}
+
+function toggleDayNightMode() {
+    if (currentTheme === "night") {
+        applyTheme("day", true);
+    } else {
+        applyTheme("night", true);
+    }
+}
+
+function openShortcutsModal() {
+    const modal = document.getElementById("shortcuts-modal");
+    if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+}
+
+function closeShortcutsModal() {
+    const modal = document.getElementById("shortcuts-modal");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+}
+
+function toggleShortcutsModal() {
+    const modal = document.getElementById("shortcuts-modal");
+    if (modal) {
+        if (modal.classList.contains("hidden")) {
+            openShortcutsModal();
+        } else {
+            closeShortcutsModal();
+        }
+    }
 }
 
 function setupCanvasTelemetry() {
@@ -383,7 +462,7 @@ function setActivePresetStyle(sampleType) {
     currentActivePreset = sampleType;
     const btn = document.getElementById(`preset-${sampleType}`);
     if (btn) {
-        btn.classList.add("border-[#38bdf8]", "bg-[#1e2f47]", "ring-2", "ring-[#38bdf8]/70");
+        btn.classList.add("active-preset");
     }
 
     const badge = document.getElementById("loaded-file-badge");
@@ -394,7 +473,7 @@ function setActivePresetStyle(sampleType) {
 
 function clearActivePresetStyles() {
     document.querySelectorAll(".preset-btn").forEach(btn => {
-        btn.classList.remove("border-[#38bdf8]", "bg-[#1e2f47]", "ring-2", "ring-[#38bdf8]/70");
+        btn.classList.remove("active-preset");
     });
 }
 
@@ -499,30 +578,19 @@ function updatePredictionBanner(detections, baseLat, baseLon) {
         const className = topDet.class_name;
         const icon = DEBRIS_ICONS[className] || "⚠️";
         const title = DEBRIS_TITLES[className] || `${className.toUpperCase().replace('_', ' ')} DETECTED`;
-        const color = topDet.color || "#38bdf8";
 
         const coords = topDet.coordinates || {};
         const lat = coords.latitude || baseLat;
         const lon = coords.longitude || baseLon;
         const geoDegrees = coords.geo_location_degrees || formatDegrees(lat, lon);
 
-        bannerEl.style.borderColor = color;
         iconEl.textContent = icon;
-        iconEl.style.borderColor = color;
-        iconEl.style.backgroundColor = `${color}25`;
         titleEl.textContent = title;
-        titleEl.style.color = color;
 
-        confBadge.textContent = `${topDet.confidence_percent} Confidence`;
-        confBadge.style.backgroundColor = `${color}35`;
-        confBadge.style.color = "#ffffff";
+        confBadge.textContent = `${topDet.confidence_percent}`;
+        confBadge.className = "px-2.5 py-0.5 rounded-md text-xs font-mono-clean font-bold bg-[#052e16] text-[#4ade80] border border-[#22c55e]/40 shadow-[0_0_8px_rgba(34,197,94,0.2)]";
 
-        coordsBadge.innerHTML = `
-            <span>Geo Location: <strong class="text-white">${geoDegrees}</strong></span>
-            <button onclick="copyToClipboard('${geoDegrees}')" class="ml-2 px-1.5 py-0.5 rounded bg-[#1e2a3c] hover:bg-[#2e405a] text-[10px] text-[#38bdf8] hover:text-white transition-colors border border-[#2a3a50]" title="Copy GPS Coordinates (Press C)">
-                📋 Copy
-            </button>
-        `;
+        coordsBadge.innerHTML = `WGS84: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 
         const mapCoordsEl = document.getElementById("map-coords-indicator");
         if (mapCoordsEl) {
@@ -530,20 +598,12 @@ function updatePredictionBanner(detections, baseLat, baseLon) {
         }
     } else {
         const baseGeoDegrees = formatDegrees(baseLat, baseLon);
-        bannerEl.style.borderColor = "#1e2a3c";
         iconEl.textContent = "🌊";
-        iconEl.style.borderColor = "#24334a";
-        iconEl.style.backgroundColor = "#162235";
         titleEl.textContent = "NO DEBRIS DETECTED (NATURAL SEABED)";
-        titleEl.style.color = "#94a3b8";
 
-        confBadge.textContent = "Clean Seafloor";
-        confBadge.style.backgroundColor = "#1b2535";
-        confBadge.style.color = "#64748b";
-
-        coordsBadge.innerHTML = `
-            <span>Survey Origin: <strong class="text-white">${baseGeoDegrees}</strong></span>
-        `;
+        confBadge.textContent = "Clean";
+        confBadge.className = "px-2.5 py-0.5 rounded-md text-xs font-mono-clean font-bold bg-[#1e293b] text-[#94a3b8] border border-[#334155]";
+        coordsBadge.innerHTML = `WGS84: ${baseLat.toFixed(5)}, ${baseLon.toFixed(5)}`;
 
         const mapCoordsEl = document.getElementById("map-coords-indicator");
         if (mapCoordsEl) {
@@ -558,20 +618,21 @@ function updateReportsTable(detections = [], baseLat, baseLon) {
 
     tbody.innerHTML = "";
     if (detections.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-[#64748b]">No debris targets detected. Image shows clean natural seafloor.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-[#64748b]">No debris detected. Natural seabed profile.</td></tr>`;
         return;
     }
 
-    detections.forEach(det => {
+    detections.forEach((det, idx) => {
         const coords = det.coordinates || {};
         const dims = det.dimensions || {};
         const lat = coords.latitude || baseLat;
         const lon = coords.longitude || baseLon;
-        const geoDegrees = coords.geo_location_degrees || formatDegrees(lat, lon);
+        const geoDegrees = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        const sizeStr = `${dims.length_m || 100} × ${dims.width_m || 10}`;
 
         const tr = document.createElement("tr");
         tr.id = `report-row-${det.id}`;
-        tr.className = "hover:bg-[#151f2e] transition-colors cursor-pointer";
+        tr.className = "hover:bg-[#111a28] transition-colors cursor-pointer";
         tr.onclick = () => {
             if (gisMap) {
                 gisMap.focusTarget(det.id, lat, lon);
@@ -579,20 +640,14 @@ function updateReportsTable(detections = [], baseLat, baseLon) {
             highlightTableRow(det.id);
         };
 
+        const typeName = det.class_name ? (det.class_name.charAt(0).toUpperCase() + det.class_name.slice(1)).replace('_', ' ') : "Debris";
+
         tr.innerHTML = `
-            <td class="py-2.5 px-3 font-mono-clean text-[#7bd0ff]">#${det.id}</td>
-            <td class="py-2.5 px-3 font-semibold uppercase flex items-center gap-1.5" style="color: ${det.color}">
-                <span>${DEBRIS_ICONS[det.class_name] || "⚠️"}</span>
-                <span>${det.class_name.replace('_', ' ')}</span>
-            </td>
+            <td class="py-2.5 px-3 font-mono-clean text-[#94a3b8]">${idx + 1}</td>
+            <td class="py-2.5 px-3 font-medium text-white">${typeName}</td>
             <td class="py-2.5 px-3 font-bold text-[#10b981]">${det.confidence_percent}</td>
-            <td class="py-2.5 px-3 font-mono-clean text-xs text-[#38bdf8] flex items-center gap-1.5">
-                <span>${geoDegrees}</span>
-                <button onclick="event.stopPropagation(); copyToClipboard('${geoDegrees}')" class="px-1.5 py-0.5 rounded bg-[#1e2a3c] hover:bg-[#2e405a] text-[10px] text-[#94a3b8] hover:text-white transition-colors" title="Copy Coordinates">
-                    📋
-                </button>
-            </td>
-            <td class="py-2.5 px-3 text-[#94a3b8]">${dims.length_m || 0}m × ${dims.width_m || 0}m</td>
+            <td class="py-2.5 px-3 font-mono-clean text-xs text-[#38bdf8] hover:underline cursor-pointer" onclick="event.stopPropagation(); copyToClipboard('${geoDegrees}')" title="Click to copy coordinates">${geoDegrees}</td>
+            <td class="py-2.5 px-3 text-[#94a3b8] font-mono-clean">${sizeStr}</td>
         `;
         tbody.appendChild(tr);
     });
