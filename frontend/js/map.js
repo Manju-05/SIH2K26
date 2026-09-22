@@ -48,13 +48,13 @@ class SonarGISMap {
             }
         );
 
-        // Default to Marine Chart
-        marineChartLayer.addTo(this.map);
+        // Default to Ocean Satellite Imagery matching mockup
+        satelliteLayer.addTo(this.map);
 
         // Layer Switcher Control (Top Right)
         const baseMaps = {
-            "🗺️ Marine Chart": marineChartLayer,
-            "🛰️ Ocean Satellite": satelliteLayer
+            "🛰️ Ocean Satellite": satelliteLayer,
+            "🗺️ Marine Chart": marineChartLayer
         };
         L.control.layers(baseMaps, null, { position: 'topright' }).addTo(this.map);
 
@@ -158,25 +158,11 @@ class SonarGISMap {
             });
 
             const popupContent = `
-                <div style="font-family: sans-serif; min-width: 220px; padding: 3px;">
-                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; border-bottom: 1px solid #334155; padding-bottom: 4px;">
-                        <span style="font-size: 18px;">${iconSymbol}</span>
-                        <div>
-                            <h4 style="margin: 0; color: ${markerColor}; text-transform: uppercase; font-weight: bold; font-size: 13px;">#${det.id} ${det.class_name.replace('_', ' ')}</h4>
-                            <span style="font-size: 10px; color: #94a3b8;">Target ID: SIH-TRG-${det.id}</span>
-                        </div>
-                    </div>
-                    <p style="margin: 3px 0; font-size: 11px;"><b>Confidence:</b> <span style="color: #10b981; font-weight: bold;">${det.confidence_percent}</span></p>
-                    <p style="margin: 3px 0; font-size: 11px; color: #0284c7;"><b>Geo Location:</b> <span style="font-family: monospace; font-weight: bold;">${geoDeg}</span></p>
-                    <p style="margin: 3px 0; font-size: 11px;"><b>Dimensions:</b> ${dims.length_m || 0}m (L) × ${dims.width_m || 0}m (W) × ${dims.estimated_height_m || 0}m (H)</p>
-                    <p style="margin: 3px 0; font-size: 11px; color: ${det.acoustic_physics && det.acoustic_physics.has_shadow ? '#10b981' : '#f59e0b'};">
-                        <b>Acoustic Physics:</b> ${det.acoustic_physics && det.acoustic_physics.has_shadow ? '✅ Shadow Verified' : 'Specular Reflection'}
-                    </p>
-                    <div style="margin-top: 6px; padding-top: 4px; border-top: 1px dashed #334155;">
-                        <button onclick="copyToClipboard('${geoDeg}')" style="background: #1e293b; border: 1px solid #475569; color: #38bdf8; font-size: 11px; padding: 2px 8px; border-radius: 4px; cursor: pointer; width: 100%;">
-                            📋 Copy Lat / Lon Degrees
-                        </button>
-                    </div>
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; color: #0f172a; padding: 2px 4px; min-width: 150px;">
+                    <div style="font-weight: 700; margin-bottom: 3px; font-size: 12px;">Target: <span style="text-transform: uppercase; color: #0f172a;">${det.class_name.replace('_', ' ')}</span></div>
+                    <div style="font-weight: 600; margin-bottom: 3px; color: #334155;">Confidence: <span style="color: #16a34a; font-weight: 700;">${det.confidence_percent}</span></div>
+                    <div style="font-weight: 500; color: #475569; margin-bottom: 4px;">Size: <span style="font-family: monospace; color: #0284c7; font-weight: 600;">${dims.length_m || 100} × ${dims.width_m || 20}</span></div>
+                    <div style="font-family: monospace; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 3px;">${geoDeg}</div>
                 </div>
             `;
 
