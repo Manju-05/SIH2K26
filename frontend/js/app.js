@@ -39,6 +39,154 @@ const SAMPLE_LOCATIONS = {
 let debounceTimer = null;
 let hasCustomLocationSet = false;
 
+// =========================================================================
+// Sonar Hydrographic Audio Ping Alert Engine (Web Audio API)
+// =========================================================================
+let audioCtx = null;
+let isAudioEnabled = true;
+
+function getAudioContext() {
+    if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume().catch(() => {});
+    }
+    return audioCtx;
+}
+
+// Ensure audio context is ready on first user gesture
+function unlockAudioContext() {
+    getAudioContext();
+}
+document.addEventListener("click", unlockAudioContext, { once: true });
+document.addEventListener("keydown", unlockAudioContext, { once: true });
+
+function playSonarPingAlert(debrisType = "shipwreck", repeatCount = 3) {
+    if (!isAudioEnabled) return;
+
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        if (debrisType === "clean_seabed") {
+            return; // Natural seabed, no alarm
+        }
+
+        // Custom acoustic signature frequency per target classification
+        let baseFreq = 1040;
+        if (debrisType === "mine_cylinder") {
+            baseFreq = 1220; // High urgency alert
+        } else if (debrisType === "ghost_net") {
+            baseFreq = 940;  // Resonant mid ping
+        } else if (debrisType === "submarine_pipeline") {
+            baseFreq = 860;  // Deep subsea harmonic
+        } else if (debrisType === "shipwreck") {
+            baseFreq = 1080; // High clear hydrographic ping
+        }
+
+        const triggerSinglePing = (timeOffset, freq, gainVal = 0.28, duration = 0.85) => {
+            const now = ctx.currentTime + timeOffset;
+
+            // Master Gain Envelope: sharp instantaneous attack + long underwater reverberation tail
+            const masterGain = ctx.createGain();
+            masterGain.gain.setValueAtTime(0.0001, now);
+            masterGain.gain.exponentialRampToValueAtTime(gainVal, now + 0.012);
+            masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            // Biquad Bandpass Filter (Simulates deep seawater acoustic absorption)
+            const filter = ctx.createBiquadFilter();
+            filter.type = "bandpass";
+            filter.frequency.setValueAtTime(freq, now);
+            filter.Q.setValueAtTime(5.5, now);
+
+            // Primary Transducer Oscillator (Pure acoustic carrier with subtle down-chirp)
+            const osc1 = ctx.createOscillator();
+            osc1.type = "sine";
+            osc1.frequency.setValueAtTime(freq * 1.04, now);
+            osc1.frequency.exponentialRampToValueAtTime(freq, now + 0.06);
+
+            // Secondary Harmonic Oscillator (Gives metallic acoustic ping ring)
+            const osc2 = ctx.createOscillator();
+            osc2.type = "sine";
+            osc2.frequency.setValueAtTime(freq * 2.01, now);
+
+            const osc2Gain = ctx.createGain();
+            osc2Gain.gain.setValueAtTime(gainVal * 0.35, now);
+            osc2Gain.gain.exponentialRampToValueAtTime(0.0001, now + (duration * 0.45));
+
+            // Connect audio graph
+            osc1.connect(filter);
+            osc2.connect(osc2Gain);
+            osc2Gain.connect(filter);
+            filter.connect(masterGain);
+            masterGain.connect(ctx.destination);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + duration);
+            osc2.stop(now + duration);
+        };
+
+        // Play 3 sequential rhythmic sonar pings
+        const pingIntervalSec = 0.65;
+        for (let i = 0; i < repeatCount; i++) {
+            const offset = i * pingIntervalSec;
+            // Subtle natural frequency variation and reverberation decay over the 3 pings
+            const freqVariation = baseFreq * (1.0 + (i === 0 ? 0.02 : (i === 1 ? 0 : -0.02)));
+            const gain = i === 0 ? 0.28 : (i === 1 ? 0.25 : 0.22);
+            triggerSinglePing(offset, freqVariation, gain, 0.85);
+
+            // Synchronize visual pulse ripple feedback for each of the 3 pings
+            setTimeout(() => {
+                triggerVisualPingEffect();
+            }, i * (pingIntervalSec * 1000));
+        }
+    } catch (e) {
+        console.warn("Sonar audio ping note:", e.message);
+    }
+}
+
+function triggerVisualPingEffect() {
+    const audioBtn = document.getElementById("audio-toggle-btn");
+    const banner = document.getElementById("prediction-banner");
+    
+    [audioBtn, banner].forEach(el => {
+        if (el) {
+            el.classList.remove("sonar-ping-active");
+            void el.offsetWidth;
+            el.classList.add("sonar-ping-active");
+        }
+    });
+}
+
+function toggleAudioAlert() {
+    isAudioEnabled = !isAudioEnabled;
+    const btn = document.getElementById("audio-toggle-btn");
+    const icon = document.getElementById("audio-icon");
+    const label = document.getElementById("audio-label");
+
+    if (isAudioEnabled) {
+        if (icon) icon.textContent = "🔊";
+        if (label) label.textContent = "PING: ON";
+        if (btn) {
+            btn.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono-clean bg-[#0d1624] text-[#38bdf8] border border-[#1b2b42] hover:border-[#38bdf8] transition-all cursor-pointer shadow-sm";
+        }
+        showToast("🔊 Sonar Audio Alert: ENABLED (3 Pings)");
+        playSonarPingAlert("shipwreck", 3);
+    } else {
+        if (icon) icon.textContent = "🔈";
+        if (label) label.textContent = "PING: MUTED";
+        if (btn) {
+            btn.className = "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono-clean bg-[#0a0f18] text-[#64748b] border border-[#1a2333] hover:border-[#334155] transition-all cursor-pointer shadow-sm";
+        }
+        showToast("🔈 Sonar Audio Alert: MUTED");
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     waterfallViewer = new SonarWaterfallViewer("waterfall-canvas");
     gisMap = new SonarGISMap("leaflet-map");
@@ -188,6 +336,7 @@ function setupKeyboardShortcuts() {
         }
         else if (key === "E") exportCSV();
         else if (key === "G") exportGeoJSON();
+        else if (key === "M") toggleAudioAlert();
     });
 }
 
@@ -546,6 +695,11 @@ async function processSonarData(fileBlob) {
 
         // 4. Update Leaflet GIS Map with coordinates
         gisMap.updateDetections(data.detections, lat, lon);
+
+        // 5. Trigger Hydrographic Sonar Audio Ping Alert if debris detected
+        if (data.detections && data.detections.length > 0) {
+            playSonarPingAlert(data.detections[0].class_name);
+        }
 
         // Update target count text
         const countEl = document.getElementById("detection-count-text");

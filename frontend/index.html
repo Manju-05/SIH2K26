@@ -41,8 +41,14 @@
             <kbd class="px-1.5 py-0.5 bg-[#172336] text-[#cbd5e1] rounded border border-[#23354d] text-[10px] font-bold">K</kbd>
         </div>
 
-        <!-- Right: Day and Night Mode (DND) & AI Model Status -->
+        <!-- Right: Day and Night Mode (DND), Sonar Audio Alert & AI Model Status -->
         <div class="flex items-center gap-3">
+            <!-- Sonar Audio Ping Alert Toggle -->
+            <button id="audio-toggle-btn" onclick="toggleAudioAlert()" class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono-clean bg-[#0d1624] text-[#38bdf8] border border-[#1b2b42] hover:border-[#38bdf8] transition-all cursor-pointer shadow-sm" title="Toggle Sonar Audio Ping Alert (Key: M)">
+                <span id="audio-icon" class="text-[13px]">🔊</span>
+                <span id="audio-label" class="font-bold tracking-wide">PING: ON</span>
+            </button>
+
             <!-- Day and Night (DND) Mode Toggle Button -->
             <button id="theme-toggle-btn" onclick="toggleDayNightMode()" class="theme-toggle-btn night-mode flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono-clean transition-all" title="Toggle Day and Night Mode (DND / Theme)">
                 <span id="theme-icon" class="text-[13px]">🌙</span>
@@ -113,52 +119,43 @@
                             </button>
                         </div>
 
-                        <!-- Ocean Basin Explorer + GPS & Random Buttons -->
-                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                            <div class="sm:col-span-8">
-                                <select id="ocean-basin-select" onchange="selectOceanBasin(this.value)" class="w-full bg-[#070b13] border border-[#1b2b40] text-white text-xs px-3 py-2 rounded-lg font-mono-clean focus:outline-none focus:border-[#38bdf8]">
-                                    <option value="">Ocean Basin Explorer</option>
-                                    <option value="13.0827,80.3850">Bay of Bengal (Deep Shelf - 13.08°N, 80.38°E)</option>
-                                    <option value="18.9220,72.8347">Arabian Sea (Mumbai High - 18.92°N, 72.83°E)</option>
-                                    <option value="9.2800,79.1800">Gulf of Mannar (Coral Marine - 9.28°N, 79.18°E)</option>
-                                    <option value="11.6800,92.8200">Andaman Sea (Deep Trench - 11.68°N, 92.82°E)</option>
-                                    <option value="8.0780,77.5410">Indian Ocean (Cape Comorin - 8.07°N, 77.54°E)</option>
-                                    <option value="25.276987,55.296249">Persian Gulf (Offshore Grid - 25.28°N, 55.30°E)</option>
-                                    <option value="20.0000,38.5000">Red Sea Rift (20.00°N, 38.50°E)</option>
-                                    <option value="35.0000,18.0000">Mediterranean Basin (35.00°N, 18.00°E)</option>
-                                    <option value="56.5000,3.2000">North Sea Subsea Grid (56.50°N, 3.20°E)</option>
-                                    <option value="27.5000,-90.0000">Gulf of Mexico Basin (27.50°N, 90.00°W)</option>
-                                    <option value="11.3500,142.2000">Mariana Trench (Challenger Deep - 11.35°N, 142.20°E)</option>
-                                </select>
+                        <!-- Ocean Basin Explorer (Full Width) -->
+                        <div class="w-full">
+                            <select id="ocean-basin-select" onchange="selectOceanBasin(this.value)" class="w-full bg-[#070b13] border border-[#1b2b40] text-white text-xs px-3 py-2 rounded-lg font-mono-clean focus:outline-none focus:border-[#38bdf8] transition-colors">
+                                <option value="">🌐 Select Ocean Survey Basin...</option>
+                                <option value="13.0827,80.3850" selected>🌊 Bay of Bengal (Deep Shelf - 13.08°N, 80.38°E)</option>
+                                <option value="18.9220,72.8347">⚓ Arabian Sea (Mumbai High - 18.92°N, 72.83°E)</option>
+                                <option value="9.2800,79.1800">🪸 Gulf of Mannar (Coral Marine - 9.28°N, 79.18°E)</option>
+                                <option value="11.6800,92.8200">🏝️ Andaman Sea (Deep Trench - 11.68°N, 92.82°E)</option>
+                                <option value="8.0780,77.5410">🧭 Indian Ocean (Cape Comorin - 8.07°N, 77.54°E)</option>
+                                <option value="25.276987,55.296249">🛢️ Persian Gulf (Offshore Grid - 25.28°N, 55.30°E)</option>
+                                <option value="20.0000,38.5000">🔴 Red Sea Rift (20.00°N, 38.50°E)</option>
+                                <option value="35.0000,18.0000">🏛️ Mediterranean Basin (35.00°N, 18.00°E)</option>
+                                <option value="56.5000,3.2000">⚡ North Sea Subsea Grid (56.50°N, 3.20°E)</option>
+                                <option value="27.5000,-90.0000">🌊 Gulf of Mexico Basin (27.50°N, 90.00°W)</option>
+                                <option value="11.3500,142.2000">🕳️ Mariana Trench (Challenger Deep - 11.35°N, 142.20°E)</option>
+                            </select>
+                        </div>
+
+                        <!-- AI Detection Sensitivity Slider Card -->
+                        <div class="p-2.5 rounded-lg bg-[#070b13] border border-[#1b2b40] flex flex-col gap-1.5">
+                            <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
+                                <span class="flex items-center gap-1">
+                                    <span>AI Detection Sensitivity</span>
+                                    <span class="text-[#64748b] font-normal lowercase">(confidence threshold)</span>
+                                </span>
+                                <span id="conf-val" class="text-xs font-mono-clean font-bold text-[#38bdf8] bg-[#0c1827] px-2 py-0.5 rounded border border-[#1a304a]">15%</span>
                             </div>
-                            <div class="sm:col-span-4 flex items-center gap-1.5">
-                                <button onclick="useCurrentGPS()" class="flex-1 px-2.5 py-2 rounded-lg bg-[#111a28] hover:bg-[#182436] hover:border-[#38bdf8] text-xs font-mono-clean text-[#cbd5e1] border border-[#22344d] transition-all flex items-center justify-center font-medium" title="Use your device GPS Location">
-                                    <span>GPS</span>
-                                </button>
-                                <button onclick="randomOceanPoint()" class="flex-1 px-2.5 py-2 rounded-lg bg-[#111a28] hover:bg-[#182436] hover:border-[#38bdf8] text-xs font-mono-clean text-[#cbd5e1] border border-[#22344d] transition-all flex items-center justify-center font-medium" title="Jump to dynamic random offshore coordinates">
-                                    <span>Random</span>
-                                </button>
+                            <input type="range" id="conf-slider" min="5" max="80" value="15" class="w-full accent-[#38bdf8] h-1.5 bg-[#172336] rounded cursor-pointer" title="Adjust AI detection sensitivity threshold"/>
+                            <div class="flex justify-between items-center text-[9px] font-mono-clean text-[#64748b]">
+                                <span>5% (Detect faint / buried debris)</span>
+                                <span>80% (Strict high-contrast highlights)</span>
                             </div>
                         </div>
 
-                        <!-- Coordinates & Sensitivity Slider -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                            <div>
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] block mb-1">Survey Lat</label>
-                                <input type="number" id="vessel-lat" step="0.0001" value="13.0827" class="w-full bg-[#070b13] border border-[#1b2b40] text-white text-xs px-2.5 py-1.5 rounded-lg font-mono-clean focus:outline-none focus:border-[#38bdf8]"/>
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] block mb-1">Survey Lon</label>
-                                <input type="number" id="vessel-lon" step="0.0001" value="80.3850" class="w-full bg-[#070b13] border border-[#1b2b40] text-white text-xs px-2.5 py-1.5 rounded-lg font-mono-clean focus:outline-none focus:border-[#38bdf8]"/>
-                            </div>
-                            <div>
-                                <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-[#64748b] mb-1">
-                                    <span>Sensitivity</span>
-                                    <span id="conf-val" class="text-[#38bdf8]">15%</span>
-                                </div>
-                                <input type="range" id="conf-slider" min="5" max="80" value="15" class="w-full mt-1.5" title="Adjust AI confidence threshold"/>
-                            </div>
-                        </div>
+                        <!-- Hidden Survey Lat / Lon fields to preserve full WGS84 Georeferencer interoperability -->
+                        <input type="hidden" id="vessel-lat" value="13.0827"/>
+                        <input type="hidden" id="vessel-lon" value="80.3850"/>
                     </div>
                 </div>
             </div>
@@ -304,6 +301,10 @@
                 <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
                     <span class="text-[#94a3b8]">Key E</span>
                     <span class="text-[#38bdf8] font-semibold">Export CSV</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
+                    <span class="text-[#94a3b8]">Key M</span>
+                    <span class="text-[#38bdf8] font-semibold">🔊 Sonar Ping</span>
                 </div>
                 <div class="flex items-center justify-between p-2 rounded bg-[#070b13] border border-[#1b2b42]">
                     <span class="text-[#94a3b8]">Alt + K</span>

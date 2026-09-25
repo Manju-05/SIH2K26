@@ -209,9 +209,10 @@ class SonarDetector:
                     continue
                 iou = _calc_iou(d["bbox"], h_det["bbox"])
                 if iou > 0.15:
-                    cls_name = d["class_name"] if d["confidence"] >= 0.70 else h_det["class_name"]
-                    cls_id = d["class_id"] if d["confidence"] >= 0.70 else h_det["class_id"]
-                    conf = min(0.96, round(0.82 + 0.14 * max(d["confidence"], h_det["confidence"]), 2))
+                    cls_name = d["class_name"] if d["confidence"] >= 0.40 else h_det["class_name"]
+                    cls_id = d["class_id"] if d["confidence"] >= 0.40 else h_det["class_id"]
+                    # Dynamic fusion of model probability and heuristic acoustic contrast
+                    conf = round(float(np.clip(max(d["confidence"], h_det["confidence"]) * 0.95 + 0.05, 0.20, 0.94)), 2)
                     raw_detections.append({
                         "bbox": h_det["bbox"],
                         "confidence": conf,
@@ -222,7 +223,7 @@ class SonarDetector:
                     matched = True
                     break
             if not matched:
-                conf = min(0.93, round(0.80 + 0.15 * d["confidence"], 2))
+                conf = round(float(np.clip(d["confidence"], 0.15, 0.92)), 2)
                 raw_detections.append({
                     "bbox": d["bbox"],
                     "confidence": conf,
@@ -291,14 +292,21 @@ class SonarDetector:
             # Dimensions
             dim_res = self.georeferencer.compute_physical_dimensions(box_w, box_h)
 
-            # Calibrated operational confidence (88% - 96% for verified seabed debris targets)
+            # Calibrated operational confidence reflecting true sensor backscatter & physics verification
             base_score = float(det["confidence"])
+            physics_conf = float(physics_res.get("physics_confidence", 0.5))
+
+            # Weighted fusion between candidate confidence and physical acoustic validation
             if physics_res["has_shadow"] and physics_res["has_highlight"]:
-                calibrated_conf = min(0.96, round(max(0.89, base_score + 0.03), 2))
-            elif physics_res["has_shadow"] or physics_res["has_highlight"]:
-                calibrated_conf = min(0.94, round(max(0.86, base_score), 2))
+                calibrated_conf = round(0.55 * base_score + 0.45 * physics_conf, 2)
+            elif physics_res["has_shadow"]:
+                calibrated_conf = round(0.50 * base_score + 0.35 * physics_conf, 2)
+            elif physics_res["has_highlight"]:
+                calibrated_conf = round(0.55 * base_score + 0.30 * physics_conf, 2)
             else:
-                calibrated_conf = round(base_score, 2)
+                calibrated_conf = round(base_score * 0.40, 2)
+
+            calibrated_conf = float(np.clip(calibrated_conf, 0.05, 0.96))
 
             class_name = det["class_name"]
             # Physical morphology distinction: compact cylinders vs sprawling net mesh
@@ -369,29 +377,54 @@ class SonarDetector:
         _, highlight_mask = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY)
         contours, _ = cv2.findContours(highlight_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+        # Estimate median background seafloor backscatter intensity
+        bg_intensity = float(np.median(gray)) if gray.size > 0 else 70.0
+
         for cnt in contours:
             area = cv2.contourArea(cnt)
             if 150 < area < 40000:
                 x, y, bw, bh = cv2.boundingRect(cnt)
                 aspect = bw / float(bh)
                 
+                # Extract object patch to measure true acoustic return brightness
+                obj_crop = gray[y:y+bh, x:x+bw]
+                obj_mean = float(np.mean(obj_crop)) if obj_crop.size > 0 else 180.0
+                contrast_factor = float(np.clip((obj_mean - bg_intensity) / 140.0, 0.0, 1.0))
+
+                # Check shadow direction based on nadir side
+                center_x = x + bw // 2
+                is_stbd = center_x >= (w // 2)
+                sh_w = int(bw * 1.2)
+                if is_stbd:
+                    sh_crop = gray[y:y+bh, x+bw:min(w, x+bw+sh_w)]
+                else:
+                    sh_crop = gray[y:y+bh, max(0, x-sh_w):x]
+
+                sh_factor = 0.0
+                if sh_crop.size > 0:
+                    sh_mean = float(np.mean(sh_crop))
+                    sh_factor = float(np.clip((bg_intensity - sh_mean) / 80.0, 0.0, 1.0))
+
                 # Classify roughly based on morphology
                 if aspect > 2.5 or aspect < 0.4:
                     cls_name = "submarine_pipeline"
                     cls_id = 1
-                    conf = 0.88
+                    base_c = 0.55
                 elif area > 7000:
                     cls_name = "shipwreck"
                     cls_id = 2
-                    conf = 0.91
+                    base_c = 0.65
                 elif 1200 <= area <= 7000:
                     cls_name = "ghost_net"
                     cls_id = 3
-                    conf = 0.89
+                    base_c = 0.52
                 else:
                     cls_name = "mine_cylinder"
                     cls_id = 4
-                    conf = 0.91
+                    base_c = 0.50
+
+                # Compute dynamic confidence based on morphology + contrast + shadow depth
+                conf = round(float(np.clip(base_c + (0.25 * contrast_factor) + (0.20 * sh_factor), 0.20, 0.94)), 2)
 
                 if conf >= thresh:
                     detections.append({

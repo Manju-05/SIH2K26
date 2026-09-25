@@ -95,12 +95,22 @@ class AcousticShadowValidator:
             estimated_height_m = (shadow_length_m * sensor_altitude_m) / (slant_range_m + shadow_length_m + 1e-6)
             estimated_height_m = round(float(np.clip(estimated_height_m, 0.1, 15.0)), 2)
 
-        # Composite physical confidence score
-        physics_score = 0.4
-        if has_highlight:
-            physics_score += 0.3
-        if has_shadow:
-            physics_score += 0.3
+        # Composite physical confidence score based on real acoustic contrast & shadow depth
+        hl_contrast = float(np.clip((np.mean(obj_crop) - 60.0) / 160.0, 0.0, 1.0)) if obj_crop.size > 0 else 0.0
+        sh_contrast = 0.0
+        if has_shadow and shadow_crop is not None and shadow_crop.size > 0:
+            sh_contrast = float(np.clip((110.0 - np.mean(shadow_crop)) / 100.0, 0.0, 1.0))
+
+        # Balanced physical confidence reflecting actual sensor acoustic contrast
+        if has_highlight and has_shadow:
+            physics_score = 0.45 + (0.30 * hl_contrast) + (0.25 * sh_contrast)
+        elif has_highlight:
+            physics_score = 0.30 + (0.40 * hl_contrast)
+        elif has_shadow:
+            physics_score = 0.25 + (0.45 * sh_contrast)
+        else:
+            physics_score = 0.15
+        physics_score = float(np.clip(physics_score, 0.10, 0.96))
 
         return {
             "is_valid": has_highlight or has_shadow,

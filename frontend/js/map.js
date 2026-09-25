@@ -28,10 +28,9 @@ class SonarGISMap {
             zoomControl: true
         });
 
-        // 1. CARTO Voyager Marine Chart Basemap
-        const cartoApiKey = "cb1_3r3z_1_0c689e3dc112e007946954b3";
-        const marineChartLayer = L.tileLayer(
-            `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${cartoApiKey}`,
+        // 1. CARTO Dark Matter (Primary Dark Hydrographic Swath - Perfect for Dark Mode & Deep Oceans)
+        const darkOceanLayer = L.tileLayer(
+            'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
             {
                 attribution: '&copy; OpenStreetMap, &copy; CARTO',
                 subdomains: 'abcd',
@@ -39,24 +38,51 @@ class SonarGISMap {
             }
         );
 
-        // 2. High-Resolution Ocean Satellite Imagery (ESRI World Imagery)
-        const satelliteLayer = L.tileLayer(
-            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        // 2. Official ESRI World Ocean Bathymetry (NOAA & GEBCO Deep Ocean Seafloor)
+        const esriOceanLayer = L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
             {
-                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                attribution: 'Tiles &copy; Esri &mdash; GEBCO, NOAA, National Geographic',
+                maxNativeZoom: 13,
                 maxZoom: 19
             }
         );
 
-        // Default to Ocean Satellite Imagery matching mockup
-        satelliteLayer.addTo(this.map);
+        // 3. CARTO Voyager Marine Navigational Chart
+        const marineChartLayer = L.tileLayer(
+            'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+            {
+                attribution: '&copy; OpenStreetMap, &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }
+        );
+
+        // 4. OpenStreetMap Nautical Grid
+        const osmLayer = L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }
+        );
+
+        // Default to Dark Hydrographic Swath (matches FlowNex UI perfectly with zero missing tiles)
+        darkOceanLayer.addTo(this.map);
 
         // Layer Switcher Control (Top Right)
         const baseMaps = {
-            "🛰️ Ocean Satellite": satelliteLayer,
-            "🗺️ Marine Chart": marineChartLayer
+            "🌊 Dark Hydrographic": darkOceanLayer,
+            "🌐 Ocean Bathymetry (NOAA)": esriOceanLayer,
+            "🗺️ Marine Chart": marineChartLayer,
+            "🌍 OpenStreetMap": osmLayer
         };
         L.control.layers(baseMaps, null, { position: 'topright' }).addTo(this.map);
+
+        // Ensure map renders properly on load
+        setTimeout(() => {
+            if (this.map) this.map.invalidateSize();
+        }, 150);
 
         this.markersLayer = L.layerGroup().addTo(this.map);
         this.tracklineLayer = L.layerGroup().addTo(this.map);
